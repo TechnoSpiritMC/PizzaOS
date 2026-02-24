@@ -1,0 +1,98 @@
+Open Watcom Linker Version 2.0 beta Feb 17 2026 03:33:22 (64-bit)
+Copyright (c) 2002-2026 The Open Watcom Contributors. All Rights Reserved.
+Portions Copyright (c) 1985-2002 Sybase, Inc. All Rights Reserved.
+Created on:       26/02/18 22:14:51
+Executable Image: build/kernel.bin
+creating a RAW Binary Image executable
+
+
+                        +------------+
+                        |   Groups   |
+                        +------------+
+
+Group                           Address              Size
+=====                           =======              ====
+
+DGROUP                          0000039c             00000062
+
+
+
+                        +--------------+
+                        |   Segments   |
+                        +--------------+
+
+Segment                Class          Group          Address         Size
+=======                =====          =====          =======         ====
+
+_ENTRY                 CODE           AUTO           00000000        00000010
+_TEXT                  CODE           AUTO           00000010        0000038c
+CONST                  DATA           DGROUP         0000039c        00000050
+CONST2                 DATA           DGROUP         000003ec        00000011
+_DATA                  DATA           DGROUP         000003fe        00000000
+
+
+                        +----------------+
+                        |   Memory Map   |
+                        +----------------+
+
+* = unreferenced symbol
++ = symbol only referenced locally
+
+Address        Symbol
+=======        ======
+
+Module: build/kernel/asm/main.obj(src/kernel/main.asm)
+00000000       entry
+Module: build/kernel/asm/print.obj(src/kernel/stdio/print.asm)
+00000010       _x86_div64_32
+0000003e       _x86_Video_WriteChatTeletype
+Module: build/kernel/c/main.obj(/mnt/c/bidouillage/asm/technos/src/kernel/main.c)
+00000051       __cstart
+Module: build/kernel/c/stdio.obj(/mnt/c/bidouillage/asm/technos/src/kernel/stdio/stdio.c)
+0000007e+      putc_
+00000091       puts_
+000000a2+      puts_f_
+000000c0       _printf
+000001e4+      printf_number_
+000003ec+      _possibleChars
+Module: build/kernel/asm/disk.obj(src/kernel/disk/asmDisk.asm)
+00000379       _x86_Disk_Reset
+
+
+                        +---------------------+
+                        |   Module Segments   |
+                        +---------------------+
+
+! = 32-bit segment
+c = initialized communal data
+
+Module          Segment               Class           Address         Size
+======          =======               =====           =======         ====
+
+src/kernel/main.asm
+                _ENTRY                CODE           00000000         00000010
+src/kernel/stdio/print.asm
+                _TEXT                 CODE           00000010         00000041
+/mnt/c/bidouillage/asm/technos/src/kernel/main.c
+                _TEXT                 CODE           00000051         0000002d
+                CONST                 DATA           0000039c         00000050
+                CONST2                DATA           000003ec         00000000
+                _DATA                 DATA           000003fe         00000000
+/mnt/c/bidouillage/asm/technos/src/kernel/stdio/stdio.c
+                _TEXT                 CODE           0000007e         000002fb
+                CONST                 DATA           000003ec         00000000
+                CONST2                DATA           000003ec         00000011
+                _DATA                 DATA           000003fe         00000000
+src/kernel/disk/asmDisk.asm
+                _TEXT                 CODE           00000379         00000023
+Warning! W1014: stack segment not found
+
+
+                        +-----------------------+
+                        |   Linker Statistics   |
+                        +-----------------------+
+
+Stack size:  0200 (512.)
+Memory size:  03fe (1022.)
+Entry point address: 00000000
+Link time: 00:00.66
