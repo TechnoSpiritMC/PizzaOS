@@ -155,7 +155,7 @@ void setLanguage(uint8_t languageIndex) {
     displayLanguageName();
 }
 
-void keyboardHandler( struct InterruptRegisters* regs) {
+void keyboardHandler(struct InterruptRegisters* regs) {
     char scanCode = inPortB(0x60) & 0x7F; // What key has been pressed.
     char press = inPortB(0x60) & 0x80;    // Pressed down or released.
 
