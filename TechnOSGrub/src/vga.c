@@ -7,7 +7,7 @@
 
 uint16_t column = 0;
 uint16_t line = 0;
-uint16_t* const vga = (uint16_t* const) 0xB8000;
+uint16_t* const vga = (uint16_t* const) 0xC00B8000;
 const uint16_t defaultColor = (color8_Bright_White << 8) | (color8_Black << 12);
 uint16_t currentColor = defaultColor;
 
