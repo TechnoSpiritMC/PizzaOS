@@ -7,6 +7,8 @@
 #include "timer/timer.h"
 #include "stdlib/stdio.h"
 
+#include "stdlib/string.h"
+
 #define LOG_TOP     1
 #define LOG_BOTTOM  22
 #define SEP_ROW     22
@@ -14,6 +16,8 @@
 #define STATUS_ROW  24
 #define PROMPT_LEN  2           // "> "
 #define CMD_MAX     (width - PROMPT_LEN - 1)
+
+#define localdebug 1
 
 static const char osHeader[] =
     "  PizzaOS v0.01  ";
@@ -43,7 +47,7 @@ static uint8_t cmdBufferIndex = 0;
 static uint16_t logCol = 0;
 static uint16_t logRow = LOG_BOTTOM;
 
-uint16_t* const consoleVga = (uint16_t* const) 0xB8000;
+uint16_t* const consoleVga = (uint16_t* const) 0xc00B8000;
 
 void* commandCharConsumer;
 
@@ -182,6 +186,11 @@ void consoleCharConsumer(char c) {
     }
 
     if (c == '\n' || c == '\r') {
+
+        if (cmdBufferIndex == 0) {
+            return;
+        }
+
         cmdBuffer[cmdBufferIndex] = '\0';
 
         // if (cmdBufferIndex > 0) {                                         // Uncomment to log the command written. Is it or any use though?
@@ -256,21 +265,37 @@ void clearLogs() {
 // Command execution logic.
 
 void commandExecutor(const char* command) {
-    unsigned int len = strlen(command);
 
+    if (command == 0) {
+        logWrite("No command specified..?\r\n", COL_ERR_CONSOLE);
+        return;
+    }
+
+    unsigned int len = strlen(command);
     char buffer[len + 1];
+
+    // buffer = abcdefg0
+    // *p          ^
+
 
     for (unsigned int i = 0; i <= len; i++)
         buffer[i] = command[i];
 
-    char *argv[len / 2 + 2];
+    // char *argv[len / 2 + 2];
+    char *argv[len + 2];
     unsigned int argc = 0;
 
     char *p = buffer;
 
     while (*p != '\0') {
-        while (*p == ' ') p++;
-        if (*p == '\0') break;
+
+        while (*p == ' ') {
+            p++;
+        }
+
+        if (*p == '\0') {
+            break;
+        }
 
         argv[argc++] = p;
 
@@ -280,6 +305,11 @@ void commandExecutor(const char* command) {
             *p = '\0';
             p++;
         }
+    }
+
+    if (argv[0] == 0) {
+        logWrite("No command specified..?\r\n", COL_ERR_CONSOLE);
+        return;
     }
 
     argv[argc] = 0;
