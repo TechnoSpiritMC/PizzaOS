@@ -1,0 +1,13 @@
+romimage: file=/usr/share/seabios/bios.bin
+vgaromimage: file=/usr/share/bochs/VGABIOS-lgpl-latest
+
+sound: driver=dummy
+speaker: enabled=0
+
+display_library: x, options="gui_debug"
+
+log: bochs.log
+
+ata0-slave: type=cdrom, path=Pizza.iso, status=inserted
+boot:cdrom
+display_library: x
