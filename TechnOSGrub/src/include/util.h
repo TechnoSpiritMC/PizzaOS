@@ -5,6 +5,8 @@
 #define advancedLogging 1
 #define newConsole 1
 
+#define CEIL_DIV(a, b) (((a + b) - 1) / b)
+
 
 void memset(void *dest, char val, uint32_t count);
 void outPortB(uint16_t port, uint8_t val);
