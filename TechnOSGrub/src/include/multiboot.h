@@ -66,3 +66,31 @@ struct multiboot_mmap_entry
 #define MULTIBOOT_MEMORY_BADRAM                 5
     uint32_t type;
 } __attribute__((packed));
+
+
+struct vbe_mode_info_structure {
+    uint16_t attributes;
+    uint8_t winA, winB;
+    uint16_t granularity;
+    uint16_t winsize;
+    uint16_t segmentA, segmentB;
+    uint32_t realFctPtr;
+    uint16_t pitch; // Bytes per scanline
+
+    uint16_t width; // Width in pixels
+    uint16_t height; // Height in pixels
+    uint8_t w_char, y_char, planes, bpp, banks; // bpp = bits per pixel
+    uint8_t memory_model, bank_size, image_pages;
+    uint8_t reserved0;
+
+    uint8_t red_mask, red_position;
+    uint8_t green_mask, green_position;
+    uint8_t blue_mask, blue_position;
+    uint8_t rsv_mask, rsv_position;
+    uint8_t direct_color_attributes;
+
+    uint32_t framebuffer; // Physical address of the pixel array!
+    uint32_t off_screen_mem_off;
+    uint16_t off_screen_mem_size;
+    uint8_t reserved1[206];
+} __attribute__((packed));
