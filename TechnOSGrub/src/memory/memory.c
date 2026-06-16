@@ -12,7 +12,7 @@ static uint32_t pageFrameMax;
 static uint32_t totalAllocated;
 
 #define NUM_PAGE_DIRS 256
-#define NUM_PAGE_FRAMES (0x10000000 / 0x1000 / 8)
+#define NUM_PAGE_FRAMES (0x10000000 / 0x1000)
 
 uint8_t physicalMemoryBitmap[NUM_PAGE_FRAMES / 8]; // Dynamically, bit array..?
 
@@ -49,7 +49,7 @@ void syncPageDirs() {
             uint32_t *pd = pageDirs[i];
 
             for (int j = 768; j < 1023; j++) {
-                pd[j] = initial_page_dir[i] & ~PAGE_FLAG_OWNER;
+                pd[j] = initial_page_dir[j] & ~PAGE_FLAG_OWNER;
             }
         }
     }
@@ -75,6 +75,7 @@ void memMapPage(uint32_t virtualAddress, uint32_t physicalAddress, uint32_t flag
     if (!(pageDir[pdIndex] & PAGE_FLAG_PRESENT)) {
         uint32_t ptPAddr = pmmAllocPageFrame();
         pageDir[pdIndex] = ptPAddr | PAGE_FLAG_PRESENT | PAGE_FLAG_WRITE | PAGE_FLAG_OWNER | flags;
+        invalidate((uint32_t) pt);   // invalidate the recursive mapping for the new PT itself
         invalidate(virtualAddress);
 
         for (uint32_t i = 0; i < 1024; i++) {
@@ -126,7 +127,7 @@ uint32_t pmmAllocPageFrame() {
                 physicalMemoryBitmap[b] = byte;
                 totalAllocated++;
 
-                uint32_t addr = (b*8*i) * 0x1000;
+                uint32_t addr = (b*8+i) * 0x1000;
                 return addr;
             }
         }
