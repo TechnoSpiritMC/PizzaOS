@@ -61,7 +61,7 @@ void printf(const char* fmt, ...){
             if (*fmt == 'l'){
                     length = PRINTF_LENGTH_LONG_LONG;
                     state = PRINTF_STATE_SPEC;
-                }else{
+                } else{
                     goto PRINTF_STATE_SPEC_;
                 }
             break;
