@@ -33,10 +33,10 @@ void print(const char* s) {
                 break;
 
             case '\t':
-                if (column == width) newLine();
+                if (column == vga_width) newLine();
                 uint16_t spaces = 4 - (column % 4);
                 while (spaces--) {
-                    vga[line * width + column++] = ' ' | currentColor;
+                    vga[line * vga_width + column++] = ' ' | currentColor;
                 }
                 break;
 
@@ -44,14 +44,14 @@ void print(const char* s) {
                 if (column > 0) column--;
                 else if (line > 0) {
                     line--;
-                    column = width - 1;
+                    column = vga_width - 1;
                 }
-                vga[line * width + column] = ' ' | currentColor;
+                vga[line * vga_width + column] = ' ' | currentColor;
                 break;
 
             default:
-                if (column == width) newLine();
-                vga[line * width + column++] = *s | currentColor;
+                if (column == vga_width) newLine();
+                vga[line * vga_width + column++] = *s | currentColor;
                 break;
         }
 
@@ -61,14 +61,14 @@ void print(const char* s) {
 }
 
 void scrollUp() {
-    for (uint16_t y = 1; y < height; y++) {
-        for (uint16_t x = 0; x < width; x++) {
-            vga[(y - 1) * width + x] = vga[y * width + x];
+    for (uint16_t y = 1; y < vga_height; y++) {
+        for (uint16_t x = 0; x < vga_width; x++) {
+            vga[(y - 1) * vga_width + x] = vga[y * vga_width + x];
         }
     }
 
-    for (uint16_t x = 0; x < width; x++) {
-        vga[(height - 1) * width + x] = ' ' | currentColor;
+    for (uint16_t x = 0; x < vga_width; x++) {
+        vga[(vga_height - 1) * vga_width + x] = ' ' | currentColor;
     }
 
     for (int i = 0; i < 5; i++) {
@@ -78,14 +78,14 @@ void scrollUp() {
 
 void scrollUpSpecific(uint8_t y1, uint8_t y2) {
     for (uint16_t y = y1; y <= y2; y++) {
-        for (uint16_t x = 0; x < width; x++) {
-            vga[(y - 1) * width + x] = vga[y * width + x];
+        for (uint16_t x = 0; x < vga_width; x++) {
+            vga[(y - 1) * vga_width + x] = vga[y * vga_width + x];
         }
     }
 }
 
 void newLine() {
-    if (line < height - 1) {
+    if (line < vga_height - 1) {
         line++;
         column = 0;
     } else {
@@ -95,7 +95,7 @@ void newLine() {
 }
 
 void updateCursor() {
-    uint16_t pos = line * width + column;
+    uint16_t pos = line * vga_width + column;
     outPortB(0x3D4, 0x0F);
     outPortB(0x3D5, (uint8_t)(pos & 0xFF));
     outPortB(0x3D4, 0x0E);
@@ -103,8 +103,8 @@ void updateCursor() {
 }
 
 void setCursor(uint16_t col, uint16_t row) {
-    if (col >= width)  col = width - 1;
-    if (row >= height) row = height - 1;
+    if (col >= vga_width)  col = vga_width - 1;
+    if (row >= vga_height) row = vga_height - 1;
     column = col;
     line   = row;
     updateCursor();
@@ -127,9 +127,9 @@ void Reset() {
     column = 0;
     currentColor = defaultColor;
 
-    for (uint16_t y = 0; y < height; y++) {
-        for (uint16_t x = 0; x < width; x++) {
-            vga[y * width + x] = ' ' | currentColor;
+    for (uint16_t y = 0; y < vga_height; y++) {
+        for (uint16_t x = 0; x < vga_width; x++) {
+            vga[y * vga_width + x] = ' ' | currentColor;
         }
     }
 }
@@ -140,12 +140,12 @@ void ResetSpecific(uint8_t y1, uint8_t y2) {
     currentColor = defaultColor;
 
     for (uint16_t y = y1; y <= y2; y++) {
-        for (uint16_t x = 0; x < width; x++) {
-            vga[y * width + x] = ' ' | currentColor;
+        for (uint16_t x = 0; x < vga_width; x++) {
+            vga[y * vga_width + x] = ' ' | currentColor;
         }
     }
 }
 
 void putToCoords(uint16_t x, uint16_t y, const char c, uint16_t color) {
-    vga[y * width + x] = c | color;
+    vga[y * vga_width + x] = c | color;
 }

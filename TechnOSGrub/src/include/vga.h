@@ -33,8 +33,8 @@
 #define PRINTF_LENGTH_LONG_LONG   4
 
 
-#define width 80
-#define height 25
+#define vga_width 80
+#define vga_height 25
 
 extern unsigned long long __udivdi3(unsigned long long numerator, unsigned long long denominator);
 extern unsigned long long __umoddi3(unsigned long long numerator, unsigned long long denominator);
