@@ -1,0 +1,12 @@
+{
+  "name": "monospace1",
+  "characters": "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ,;:!?./\\^$%&~\"#{}()|_^[]*-+<>@\u0000",
+  "font_specs": {
+    "width": 6,
+    "before": 1,
+    "after": 0,
+    "height": 12,
+    "monospace": true,
+    "alpha": true
+  }
+}
