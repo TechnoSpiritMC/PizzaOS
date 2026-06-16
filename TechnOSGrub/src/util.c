@@ -19,6 +19,17 @@ char inPortB(uint16_t Port) {
     return rv;
 }
 
+uint16_t inW(uint16_t port) {
+    uint16_t ret;
+    asm volatile("inw %1, %0" : "=a"(ret) : "Nd"(port));
+    return ret;
+}
+
+void outW(uint16_t port, uint16_t val) {
+    asm volatile ("outw %1, %0" : : "dN" (port), "a" (val));
+}
+
+
 uint32_t strlen(const char *str) {
     uint16_t len = 0;
     while (*str++) len++;
@@ -90,4 +101,12 @@ char* utoa64_hex(uint64_t v, char* buf) {
     }
     buf[16] = '\0';
     return buf;
+}
+
+void memcpy(void *dest, const void *src, uint32_t count) {
+    char *d = (char*) dest;
+    const char *s = (const char*) src;
+    for (; count != 0; count--) {
+        *d++ = *s++;
+    }
 }
