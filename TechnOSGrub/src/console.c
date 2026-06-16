@@ -15,7 +15,7 @@
 #define CMD_ROW     23
 #define STATUS_ROW  24
 #define PROMPT_LEN  2           // "> "
-#define CMD_MAX     (width - PROMPT_LEN - 1)
+#define CMD_MAX     (vga_width - PROMPT_LEN - 1)
 
 #define localdebug 1
 
@@ -52,21 +52,21 @@ uint16_t* const consoleVga = (uint16_t* const) 0xc00B8000;
 void* commandCharConsumer;
 
 static void fillRow(uint8_t row, uint16_t color) {
-    for (int x = 0; x < width; x++) {
-        consoleVga[row * width + x] = ' ' | color;
+    for (int x = 0; x < vga_width; x++) {
+        consoleVga[row * vga_width + x] = ' ' | color;
     }
 }
 
 static void clearCols(uint8_t row, uint8_t x1, uint8_t x2, uint16_t color) {
     for (int x = x1; x <= x2; x++) {
-        consoleVga[row * width + x] = ' ' | color;
+        consoleVga[row * vga_width + x] = ' ' | color;
     }
 }
 
 static void scrollLog() {
     for (int y = LOG_TOP + 1; y <= LOG_BOTTOM; y++) {
-        for (int x = 0; x < width; x++) {
-            consoleVga[(y - 1) * width + x] = consoleVga[y * width + x];
+        for (int x = 0; x < vga_width; x++) {
+            consoleVga[(y - 1) * vga_width + x] = consoleVga[y * vga_width + x];
         }
     }
     fillRow(LOG_BOTTOM, COL_LOG);
@@ -74,7 +74,7 @@ static void scrollLog() {
 
 static void logWrite(const char* s, uint16_t color) {
     while (*s) {
-        if (*s == '\n' || logCol >= (uint16_t)width) {
+        if (*s == '\n' || logCol >= (uint16_t)vga_width) {
             logCol = 0;
             if (logRow < LOG_BOTTOM) {
                 logRow++;
@@ -85,7 +85,7 @@ static void logWrite(const char* s, uint16_t color) {
         }
         if (*s == '\r') { logCol = 0; s++; continue; }
 
-        consoleVga[logRow * width + logCol] = *s | color;
+        consoleVga[logRow * vga_width + logCol] = *s | color;
         logCol++;
         s++;
     }
@@ -97,7 +97,7 @@ static void drawTitleBar() {
     for (i = 0; osHeader[i]; i++) {
         putToCoords(i, 0, osHeader[i], COL_TITLEBAR);
     }
-    for (; i < width; i++) {
+    for (; i < vga_width; i++) {
         putToCoords(i, 0, ' ', COL_TITLEBAR);
     }
 }
@@ -149,7 +149,7 @@ void initConsole() {
     logCol = 0;
     logRow = LOG_BOTTOM;
 
-    for (int y = 0; y < height; y++) fillRow(y, COL_LOG);
+    for (int y = 0; y < vga_height; y++) fillRow(y, COL_LOG);
 
     drawTitleBar();
     drawStatusBar();
@@ -419,8 +419,8 @@ void displayCriticalError(const char* title, const char* msg)
     uint16_t titleY = 10;
     uint16_t msgStartY = 11;
 
-    uint16_t titleStartX  = (width - titleLen) / 2;
-    uint16_t windowStartX = (width - windowWidth) / 2;
+    uint16_t titleStartX  = (vga_width - titleLen) / 2;
+    uint16_t windowStartX = (vga_width - windowWidth) / 2;
 
     uint16_t msgLines = (msgLen + windowWidth - 1) / windowWidth;
 
