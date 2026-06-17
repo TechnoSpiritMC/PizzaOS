@@ -20,6 +20,7 @@ void kmain(uint32_t magic, struct multiboot_info* bootInfo) {
 
     serial_init();
 
+
     if (bootInfo->flags & 1 << 11) {
         print("Bit 11 is set!");
         serial_printf("Bit 11 is set!\r\n");
@@ -31,7 +32,6 @@ void kmain(uint32_t magic, struct multiboot_info* bootInfo) {
     initIdt();
     initTimer();
     initKeyboard();
-    init_ata();
 
     print("Initializing memory..\r\n");
     serial_printf("Initializing memory!\r\n");
@@ -44,26 +44,85 @@ void kmain(uint32_t magic, struct multiboot_info* bootInfo) {
 
     kmallocInit(0x1000);
 
+    initDisplay(bootInfo);
 
-    print("All services initialized successfully!\r\n");
-    serial_printf("All services initialized successfully!\r\n");
+    if (init_ata()) {
+        serial_printf("Every service initialized successfully.\r\n");
+
+        //serial_printf("==================Trying to create a file:=====================\r\n");
+        uint32_t lba = create_file("HELP.TXT");
+        if (lba == -1) {
+            //serial_printf(">>>>>>>>>>>>>>>>>>>> Failed to create file! <<<<<<<<<<<<<<<<<<<<<<<<\r\n");
+
+            goto afterFile;
+        }
+        //serial_printf("LBA: %x\r\n", lba);
+        //serial_printf(">>>>>>>>>>> File created successfully.\r\n");
+
+        //serial_printf("================Trying to write the file:================\r\n");
+        const char* data = "This is a test file.";
+        write_file_data("HELP.TXT", data, strlen(data));
+
+        char* newData[strlen(data)] = {};
+
+        //serial_printf("===============Trying to read the file:=================\r\n");
+        read_file_by_name("HELP.TXT", newData, strlen(data));
+
+        serial_printf(">>>>>>>>>>>>>>>File read successfully.\r\n");
+        serial_printf(">>>>>>>>>>>>>>>Data: %s\r\n", newData);
+
+
+
+        //serial_printf("==================Trying to create a file:=====================\r\n");
+        uint32_t _lba = create_file("MARTIN.TXT");
+        if (_lba == -1) {
+            //serial_printf(">>>>>>>>>>>>>>>>>>>> Failed to create file! <<<<<<<<<<<<<<<<<<<<<<<<\r\n");
+
+            goto afterFile;
+        }
+        //serial_printf("LBA: %x\r\n", lba);
+        //serial_printf(">>>>>>>>>>> File created successfully.\r\n");
+
+        //serial_printf("================Trying to write the file:================\r\n");
+        const char* _data = "Martin, sache que si tu lis ce texte, c'est que tu es une personne très aimable qui regarde ce que ce tdc de denis t'envoie en masse, et c'est ce sur quoi il passe ses nuits au lieu de dormir. Enft, je fais durer ce texte pour vérifier que mon merdier peut écrire sur plusieurs secteurs en même telmps. C'est un test très important car sans ç comment suis-je sencé savoir si mon truc marche ou pas, ru vois?";
+        write_file_data("MARTIN.TXT", _data, strlen(_data));
+
+        char* _newData[strlen(_data)] = {};
+
+        //serial_printf("===============Trying to read the file:=================\r\n");
+        read_file_by_name("MARTIN.TXT", _newData, strlen(_data));
+
+        serial_printf(">>>>>>>>>>>>>>>File read successfully.\r\n");
+        serial_printf(">>>>>>>>>>>>>>>Data: %s\r\n", _newData);
+
+    } else {
+        serial_printf("ATA failed to initialize!\r\n");
+
+        for (;;) {
+            __asm__ volatile("hlt");
+        }
+    }
+
+    afterFile:
+
+    serial_printf("Trying to read the file:\r\n");
+
+    const char* data = "This is a test file.";
+    char* newData[strlen(data)] = {};
+
+    //serial_printf("===============Trying to read the file:=================\r\n");
+    read_file_by_name("HELP.TXT", newData, strlen(data));
+
+    //serial_printf(">>>>>>>>>>>>>>>File read successfully.\r\n");
+    //serial_printf(">>>>>>>>>>>>>>>Data: %s\r\n", newData);
+    
+    testDisplayAndFonts();
 
 #if newConsole
     print("Starting console in 3 seconds...\r\n");
     sleep(3);
     initConsole();
 #endif
-
-    print("Started mapping screen...\r\n");
-    serial_printf("Starting to map screen...\r\n");
-
-    initDisplay(bootInfo);
-
-    draw_string(100, 50, "HELLO WORLD!, 0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ,;:!?./\\^$%&~\"#{}()|_^[]*-+<>@", 0x00FFFFFF, 0x00000022, MONOSPACE1);
-    draw_string(100, 100, " !\"#$%&'()*+,-./0123456789:;<=>?\n@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~", 0x00FFFFFF, 0x00000022, MONOSPACE2_BIGGER);
-    for (int i = 0; i < 10*FONT_MONOSPACE2_HEIGHT; i+=FONT_MONOSPACE2_HEIGHT) {
-        draw_char(100+i, 150+i, CEIL_DIV(i, FONT_MONOSPACE2_HEIGHT)+0x20, 0x00ffffFF, 0x00000022, MONOSPACE2_BIGGER);
-    }
 
     for (;;) {
         __asm__ volatile("hlt");
