@@ -47,3 +47,13 @@ clean:
 run:
 	make
 	qemu-system-i386 -cdrom Pizza.iso*
+
+disk.img:
+	dd if=/dev/zero of=disk.img bs=1M count=64
+
+clean-disk:
+	rm -f disk.img
+
+rundrive: disk.img
+	make
+	qemu-system-i386 -cdrom Pizza.iso -drive file=disk.img,format=raw,if=ide
