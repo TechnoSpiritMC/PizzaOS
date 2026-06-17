@@ -1,7 +1,6 @@
 #pragma once
 
 #include "../include/stdint.h"
-#include "fonts/monospace1.h"
 #include "../include/multiboot.h"
 #include "fontDispatch.h"
 
@@ -33,3 +32,4 @@ static inline void draw_char(int px, int py, char c, uint32_t fg, uint32_t bg, f
 
 void draw_string(int px, int py, const char* s, uint32_t fg, uint32_t bg, font_id_t font);
 void initDisplay(struct multiboot_info* bootInfo);
+void testDisplayAndFonts();

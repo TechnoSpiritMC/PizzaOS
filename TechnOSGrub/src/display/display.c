@@ -3,6 +3,8 @@
 //
 
 #include "display.h"
+
+#include "../include/util.h"
 #include "../include/vga.h"
 #include "../memory/memory.h"
 #include "../stdlib/serial.h"
@@ -56,4 +58,12 @@ void initDisplay(struct multiboot_info* bootInfo) {
     framebuffer = pixelDisplay;
     fb_pitch = vbe->pitch / (vbe->bpp / 8); // Check if this is working?
     // fb_pitch = 800; // Check if this is working?
+}
+
+void testDisplayAndFonts() {
+    draw_string(100, 50, "HELLO WORLD!, 0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ,;:!?./\\^$%&~\"#{}()|_^[]*-+<>@", 0x00FFFFFF, 0x00000022, MONOSPACE1);
+    draw_string(100, 100, " !\"#$%&'()*+,-./0123456789:;<=>?\n@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~", 0x00FFFFFF, 0x00000022, MONOSPACE2_BIGGER);
+    for (int i = 0; i < 10*FONT_MONOSPACE2_HEIGHT; i+=FONT_MONOSPACE2_HEIGHT) {
+        draw_char(100+i, 150+i, CEIL_DIV(i, FONT_MONOSPACE2_HEIGHT)+0x20, 0x00ffffFF, 0x00000022, MONOSPACE2_BIGGER);
+    }
 }
