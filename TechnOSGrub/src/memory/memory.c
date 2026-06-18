@@ -58,6 +58,7 @@ void syncPageDirs() {
 void memMapPage(uint32_t virtualAddress, uint32_t physicalAddress, uint32_t flags) {
     uint32_t *prevPageDir = 0;
 
+    /* --- COMMENTED OUT TO PREVENT CR3 SHIFTING ---
     if (virtualAddress >= KERNEL_START) {
         prevPageDir = memGetCurrentPageDir();
 
@@ -65,6 +66,7 @@ void memMapPage(uint32_t virtualAddress, uint32_t physicalAddress, uint32_t flag
             memChangePageDir(initial_page_dir);
         }
     }
+    */
 
     uint32_t pdIndex = virtualAddress >> 22;
     uint32_t ptIndex = (virtualAddress >> 12) & 0x3FF;
@@ -75,7 +77,16 @@ void memMapPage(uint32_t virtualAddress, uint32_t physicalAddress, uint32_t flag
     if (!(pageDir[pdIndex] & PAGE_FLAG_PRESENT)) {
         uint32_t ptPAddr = pmmAllocPageFrame();
         pageDir[pdIndex] = ptPAddr | PAGE_FLAG_PRESENT | PAGE_FLAG_WRITE | PAGE_FLAG_OWNER | flags;
-        invalidate((uint32_t) pt);   // invalidate the recursive mapping for the new PT itself
+
+        uint32_t currentCr3;
+        asm volatile("mov %%cr3, %0" : "=r"(currentCr3));
+        asm volatile("mov %0, %%cr3" :: "r"(currentCr3));
+
+        for (uint32_t i = 0; i < 1024; i++) {
+            pt[i] = 0;
+        }
+
+        invalidate((uint32_t) pt);
         invalidate(virtualAddress);
 
         for (uint32_t i = 0; i < 1024; i++) {
@@ -87,12 +98,14 @@ void memMapPage(uint32_t virtualAddress, uint32_t physicalAddress, uint32_t flag
     mem_num_vpages++;
     invalidate(virtualAddress);
 
+    /* --- COMMENTED OUT TO PREVENT CR3 SHIFTING ---
     if (prevPageDir != 0) {
         syncPageDirs();
         if (prevPageDir != initial_page_dir) {
             memChangePageDir(prevPageDir);
         }
     }
+    */
 }
 
 void initMemory(uint32_t memHigh, uint32_t physicalAllocStart) {
