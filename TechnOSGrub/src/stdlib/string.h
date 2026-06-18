@@ -20,3 +20,9 @@ inline bool strcmpFixed(const char* str1, const char* str2, uint32_t len) {
     }
     return true;
 }
+
+
+inline void strcpy(char dest[], const char source[]) {
+    int i = 0;
+    while ((dest[i] = source[i]) != '\0') i++;
+}
