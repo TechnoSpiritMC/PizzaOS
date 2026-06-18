@@ -138,10 +138,17 @@ const char* exception_messages[] = {
 
 void isr_handler(struct InterruptRegisters* regs){
     if (regs->int_no < 32){
+
+        uint32_t* pixelDisplay = (uint32_t*)0xE0000000;
+
+        for (int i = 0; i < 800 * 600; i++) {
+            pixelDisplay[i] = 0x00440000;
+        }
+
         print(exception_messages[regs->int_no]);
         print("\n");
         print("Exception! System Halted\n");
-        draw_string(100, 50, "HELLO WORLD!, 0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ,;:!?./\\^$%&~\"#{}()|_^[]*-+<>@", 0x00FFFFFF, 0x00000022, MONOSPACE1);
+        draw_string(100, 50, exception_messages[regs->int_no], 0x00FFFFFF, 0x00000022, MONOSPACE1);
 
         serial_printf("A FAKIN INTERRUPT HAS HAPPENED YOU IDIOT: %x (%s)", regs->int_no, exception_messages[regs->int_no]);
 
@@ -150,12 +157,6 @@ void isr_handler(struct InterruptRegisters* regs){
             asm volatile("mov %%cr2, %0" : "=r"(faulting_address));
 
             serial_printf("\nFaulting address: %x", faulting_address);
-        }
-
-        uint32_t* pixelDisplay = (uint32_t*)0xE0000000;
-
-        for (int i = 0; i < 800 * 600; i++) {
-            pixelDisplay[i] = 0x00440000;
         }
 
 #if newConsole
