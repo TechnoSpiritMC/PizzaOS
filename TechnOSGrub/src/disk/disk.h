@@ -46,3 +46,5 @@ void write_cluster_data(uint32_t cluster, const uint16_t *buffer);
 uint32_t create_file(const char* filename);
 int32_t write_file_data(const char *filename, const void *user_data, uint32_t total_bytes);
 int32_t read_file_by_name(const char* filename, void* output_buffer, uint32_t max_bytes);
+
+void testDisk(bool ataGood);
