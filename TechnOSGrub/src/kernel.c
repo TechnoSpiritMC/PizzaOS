@@ -10,6 +10,7 @@
 #include "memory/memory.h"
 #include "stdlib/serial.h"
 #include "display/display.h"
+#include "memory/malloc.h"
 
 #include "stdlib/stdio.h"
 
@@ -38,83 +39,43 @@ void kmain(uint32_t magic, struct multiboot_info* bootInfo) {
 
     uint32_t mod1 = *(uint32_t*)(bootInfo->mods_addr + 4);
     uint32_t physicalAllocStart = (mod1 + 0xfff) & ~0xfff;
+
+    uint32_t safePhysicalStart = 0x01000000; // 16 MB boundary
+
     printf("mod1: %x, pas: %x\n", mod1, physicalAllocStart);
     serial_printf("mod1: %x, pas: %x\r\n", mod1, physicalAllocStart);
-    initMemory(bootInfo->mem_upper*1024, physicalAllocStart);
+    // initMemory(bootInfo->mem_upper*1024, physicalAllocStart);
+    initMemory(bootInfo->mem_upper*1024, safePhysicalStart);
 
     kmallocInit(0x1000);
 
+    // Debug before video init
+    struct malloc_block_struct* test_start = (struct malloc_block_struct*)0xD0000000;
+    serial_printf("BEFORE initDisplay - Size: %x, Next: %x\r\n", test_start->size, test_start->next);
+
     initDisplay(bootInfo);
 
-    if (init_ata()) {
-        serial_printf("Every service initialized successfully.\r\n");
+    // Debug after video init
+    serial_printf("AFTER initDisplay - Size: %x, Next: %x\r\n", test_start->size, test_start->next);
 
-        //serial_printf("==================Trying to create a file:=====================\r\n");
-        uint32_t lba = create_file("HELP.TXT");
-        if (lba == -1) {
-            //serial_printf(">>>>>>>>>>>>>>>>>>>> Failed to create file! <<<<<<<<<<<<<<<<<<<<<<<<\r\n");
+    bool ataInitialized = init_ata();
+    serial_printf("Initialized ata? %x\r\n", ataInitialized);
 
-            goto afterFile;
-        }
-        //serial_printf("LBA: %x\r\n", lba);
-        //serial_printf(">>>>>>>>>>> File created successfully.\r\n");
+    uint32_t my_addr = malloc(sizeof(int));
+    int *my_ptr = (int*)my_addr;
+    *my_ptr = 1234; // Stores 1234 at that address
+    serial_printf("my_ptr: %x\r\n", my_ptr);
+    serial_printf("my_ptr->value: %x\r\n", *my_ptr);
 
-        //serial_printf("================Trying to write the file:================\r\n");
-        const char* data = "This is a test file.";
-        write_file_data("HELP.TXT", data, strlen(data));
+    // 2. Writing a string or buffer
+    uint32_t buf_addr = malloc(64);
+    char *str = (char*)buf_addr;
+    strcpy(str, "Hello OS World!");
+    serial_printf("str: %s\r\n", str);
+    print(str);
 
-        char* newData[strlen(data)] = {};
-
-        //serial_printf("===============Trying to read the file:=================\r\n");
-        read_file_by_name("HELP.TXT", newData, strlen(data));
-
-        serial_printf(">>>>>>>>>>>>>>>File read successfully.\r\n");
-        serial_printf(">>>>>>>>>>>>>>>Data: %s\r\n", newData);
-
-
-
-        //serial_printf("==================Trying to create a file:=====================\r\n");
-        uint32_t _lba = create_file("MARTIN.TXT");
-        if (_lba == -1) {
-            //serial_printf(">>>>>>>>>>>>>>>>>>>> Failed to create file! <<<<<<<<<<<<<<<<<<<<<<<<\r\n");
-
-            goto afterFile;
-        }
-        //serial_printf("LBA: %x\r\n", lba);
-        //serial_printf(">>>>>>>>>>> File created successfully.\r\n");
-
-        //serial_printf("================Trying to write the file:================\r\n");
-        const char* _data = "Martin, sache que si tu lis ce texte, c'est que tu es une personne très aimable qui regarde ce que ce tdc de denis t'envoie en masse, et c'est ce sur quoi il passe ses nuits au lieu de dormir. Enft, je fais durer ce texte pour vérifier que mon merdier peut écrire sur plusieurs secteurs en même telmps. C'est un test très important car sans ç comment suis-je sencé savoir si mon truc marche ou pas, ru vois?";
-        write_file_data("MARTIN.TXT", _data, strlen(_data));
-
-        char* _newData[strlen(_data)] = {};
-
-        //serial_printf("===============Trying to read the file:=================\r\n");
-        read_file_by_name("MARTIN.TXT", _newData, strlen(_data));
-
-        serial_printf(">>>>>>>>>>>>>>>File read successfully.\r\n");
-        serial_printf(">>>>>>>>>>>>>>>Data: %s\r\n", _newData);
-
-    } else {
-        serial_printf("ATA failed to initialize!\r\n");
-
-        for (;;) {
-            __asm__ volatile("hlt");
-        }
-    }
-
-    afterFile:
-
-    serial_printf("Trying to read the file:\r\n");
-
-    const char* data = "This is a test file.";
-    char* newData[strlen(data)] = {};
-
-    //serial_printf("===============Trying to read the file:=================\r\n");
-    read_file_by_name("HELP.TXT", newData, strlen(data));
-
-    //serial_printf(">>>>>>>>>>>>>>>File read successfully.\r\n");
-    //serial_printf(">>>>>>>>>>>>>>>Data: %s\r\n", newData);
+    free(buf_addr);
+    free(my_addr);
     
     testDisplayAndFonts();
 
