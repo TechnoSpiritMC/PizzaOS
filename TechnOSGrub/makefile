@@ -1,22 +1,35 @@
 SRC = src
 BUILD = build
 
+# Compilers
 gcc = /usr/opt/cross/bin/i686-elf-gcc
+gxx = /usr/opt/cross/bin/i686-elf-g++
+
+# Compiler Flags
 CFLAGS = -ffreestanding -Wall -Wextra -g -O2
+CXXFLAGS = -ffreestanding -Wall -Wextra -g -O2 -fno-exceptions -fno-rtti
 
-#CFLAGS = -m32 -fno-stack-protector -fno-builtin // Old flags!
+all: gxx gcc asm ld iso
 
-all: gcc asm ld iso
-
+# 1. Added build/oop.o to the objects list
 ld:
-	ld -m elf_i386 -T linker.ld -o $(BUILD)/kernel $(BUILD)/boot.o $(BUILD)/kernel.o $(BUILD)/vga.o $(BUILD)/gdts.o $(BUILD)/gdt.o $(BUILD)/util.o $(BUILD)/idt.o $(BUILD)/idts.o $(BUILD)/timer.o $(BUILD)/stdio.o $(BUILD)/keyboard.o $(BUILD)/console.o $(BUILD)/memory.o $(BUILD)/kmalloc.o $(BUILD)/serial.o $(BUILD)/display.o $(BUILD)/disk.o $(BUILD)/malloc.o
+	ld -m elf_i386 -T linker.ld -o $(BUILD)/kernel \
+	$(BUILD)/boot.o $(BUILD)/kernel.o $(BUILD)/vga.o \
+	$(BUILD)/gdts.o $(BUILD)/gdt.o $(BUILD)/util.o \
+	$(BUILD)/idt.o $(BUILD)/idts.o $(BUILD)/timer.o \
+	$(BUILD)/stdio.o $(BUILD)/keyboard.o $(BUILD)/console.o \
+	$(BUILD)/memory.o $(BUILD)/kmalloc.o $(BUILD)/serial.o \
+	$(BUILD)/display.o $(BUILD)/disk.o $(BUILD)/malloc.o \
+	$(BUILD)/oop.o
 
 asm: $(SRC)/asm/boot.asm $(SRC)/asm/gdt.asm
 	nasm -f elf32 $(SRC)/asm/boot.asm       -o $(BUILD)/boot.o
 	nasm -f elf32 $(SRC)/asm/gdt.asm        -o $(BUILD)/gdts.o
 	nasm -f elf32 $(SRC)/interrupts/idt.asm -o $(BUILD)/idts.o
 
-
+# 2. Added a target for compiling your C++ files
+gxx: $(SRC)/memory/oop.cpp
+	$(gxx) $(CXXFLAGS) -c $(SRC)/memory/oop.cpp -o $(BUILD)/oop.o
 
 gcc: $(SRC)/kernel.c $(SRC)/vga.c $(SRC)/gdt.c $(SRC)/util.c $(SRC)/interrupts/idt.c $(SRC)/timer/timer.c $(SRC)/stdlib/stdio.c $(SRC)/stdlib/serial.c $(SRC)/console.c $(SRC)/memory/memory.c $(SRC)/memory/kmalloc.c $(SRC)/memory/malloc.c $(SRC)/display/display.c $(SRC)/disk/disk.c
 	$(gcc) $(CFLAGS) -c $(SRC)/kernel.c           -o $(BUILD)/kernel.o
@@ -35,8 +48,6 @@ gcc: $(SRC)/kernel.c $(SRC)/vga.c $(SRC)/gdt.c $(SRC)/util.c $(SRC)/interrupts/i
 	$(gcc) $(CFLAGS) -c $(SRC)/display/display.c  -o $(BUILD)/display.o
 	$(gcc) $(CFLAGS) -c $(SRC)/disk/disk.c        -o $(BUILD)/disk.o
 
-
-
 iso: $(BUILD)/kernel
 	cp $(BUILD)/kernel Pizza/boot/kernel
 	grub-mkrescue -o Pizza.iso Pizza
@@ -47,7 +58,7 @@ clean:
 
 run:
 	make
-	qemu-system-i386 -cdrom Pizza.iso*
+	qemu-system-i386 -cdrom Pizza.iso
 
 disk.img:
 	dd if=/dev/zero of=disk.img bs=1M count=64
