@@ -7,6 +7,9 @@
 extern uint32_t* framebuffer;
 extern int fb_pitch;
 
+#define SCREEN_WIDTH  800
+#define SCREEN_HEIGHT 600
+
 static inline uint32_t blend(uint32_t fg, uint32_t bg, uint8_t alpha /*0-255*/) {
     uint8_t fr = (fg >> 16) & 0xFF, fgg = (fg >> 8) & 0xFF, fb_ = fg & 0xFF;
     uint8_t br = (bg >> 16) & 0xFF, bgg = (bg >> 8) & 0xFF, bb_ = bg & 0xFF;
@@ -28,6 +31,10 @@ static inline void draw_char(int px, int py, char c, uint32_t fg, uint32_t bg, f
             framebuffer[(py + y) * fb_pitch + (px + x)] = color;
         }
     }
+}
+
+static inline void draw_pixel(int px, int py, uint32_t color) {
+    framebuffer[py * fb_pitch + px] = color;
 }
 
 void draw_string(int px, int py, const char* s, uint32_t fg, uint32_t bg, font_id_t font);
