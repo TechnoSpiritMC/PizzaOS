@@ -20,7 +20,7 @@ ld:
 	$(BUILD)/stdio.o $(BUILD)/keyboard.o $(BUILD)/console.o \
 	$(BUILD)/memory.o $(BUILD)/kmalloc.o $(BUILD)/serial.o \
 	$(BUILD)/display.o $(BUILD)/disk.o $(BUILD)/malloc.o \
-	$(BUILD)/oop.o
+	$(BUILD)/oop.o $(BUILD)/mouse.o
 
 asm: $(SRC)/asm/boot.asm $(SRC)/asm/gdt.asm
 	nasm -f elf32 $(SRC)/asm/boot.asm       -o $(BUILD)/boot.o
@@ -31,7 +31,7 @@ asm: $(SRC)/asm/boot.asm $(SRC)/asm/gdt.asm
 gxx: $(SRC)/memory/oop.cpp
 	$(gxx) $(CXXFLAGS) -c $(SRC)/memory/oop.cpp -o $(BUILD)/oop.o
 
-gcc: $(SRC)/kernel.c $(SRC)/vga.c $(SRC)/gdt.c $(SRC)/util.c $(SRC)/interrupts/idt.c $(SRC)/timer/timer.c $(SRC)/stdlib/stdio.c $(SRC)/stdlib/serial.c $(SRC)/console.c $(SRC)/memory/memory.c $(SRC)/memory/kmalloc.c $(SRC)/memory/malloc.c $(SRC)/display/display.c $(SRC)/disk/disk.c
+gcc: $(SRC)/kernel.c $(SRC)/vga.c $(SRC)/gdt.c $(SRC)/util.c $(SRC)/interrupts/idt.c $(SRC)/timer/timer.c $(SRC)/stdlib/stdio.c $(SRC)/stdlib/serial.c $(SRC)/console.c $(SRC)/memory/memory.c $(SRC)/memory/kmalloc.c $(SRC)/memory/malloc.c $(SRC)/display/display.c $(SRC)/io/disk/disk.c
 	$(gcc) $(CFLAGS) -c $(SRC)/kernel.c           -o $(BUILD)/kernel.o
 	$(gcc) $(CFLAGS) -c $(SRC)/vga.c              -o $(BUILD)/vga.o
 	$(gcc) $(CFLAGS) -c $(SRC)/gdt.c              -o $(BUILD)/gdt.o
@@ -39,14 +39,15 @@ gcc: $(SRC)/kernel.c $(SRC)/vga.c $(SRC)/gdt.c $(SRC)/util.c $(SRC)/interrupts/i
 	$(gcc) $(CFLAGS) -c $(SRC)/interrupts/idt.c   -o $(BUILD)/idt.o
 	$(gcc) $(CFLAGS) -c $(SRC)/timer/timer.c      -o $(BUILD)/timer.o
 	$(gcc) $(CFLAGS) -c $(SRC)/stdlib/stdio.c     -o $(BUILD)/stdio.o
-	$(gcc) $(CFLAGS) -c $(SRC)/stdlib/keyboard.c  -o $(BUILD)/keyboard.o
+	$(gcc) $(CFLAGS) -c $(SRC)/io/keyboard.c      -o $(BUILD)/keyboard.o
 	$(gcc) $(CFLAGS) -c $(SRC)/stdlib/serial.c    -o $(BUILD)/serial.o
 	$(gcc) $(CFLAGS) -c $(SRC)/console.c          -o $(BUILD)/console.o
 	$(gcc) $(CFLAGS) -c $(SRC)/memory/memory.c    -o $(BUILD)/memory.o
 	$(gcc) $(CFLAGS) -c $(SRC)/memory/kmalloc.c   -o $(BUILD)/kmalloc.o
 	$(gcc) $(CFLAGS) -c $(SRC)/memory/malloc.c    -o $(BUILD)/malloc.o
 	$(gcc) $(CFLAGS) -c $(SRC)/display/display.c  -o $(BUILD)/display.o
-	$(gcc) $(CFLAGS) -c $(SRC)/disk/disk.c        -o $(BUILD)/disk.o
+	$(gcc) $(CFLAGS) -c $(SRC)/io/disk/disk.c     -o $(BUILD)/disk.o
+	$(gcc) $(CFLAGS) -c $(SRC)/io/mouse.c         -o $(BUILD)/mouse.o
 
 iso: $(BUILD)/kernel
 	cp $(BUILD)/kernel Pizza/boot/kernel
