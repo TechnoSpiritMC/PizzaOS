@@ -1,6 +1,6 @@
 extern "C" {
-    #include "screen.h"
-    #include <stdbool.h>
+    #include "screen.hpp"
+#include <stdbool.h>
     #include "display.h"
 }
 
@@ -42,7 +42,7 @@ namespace Screen {
     }
 
     static void drawLine(int x1, int y1, int x2, int y2, bool antialias, int width, Color color) {
-        
+        __drawLine(x1, y1, x2, y2, width, color, antialias);
     }
 
     void __swap(int* a, int* b) {
