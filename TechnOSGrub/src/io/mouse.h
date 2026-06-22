@@ -1,8 +1,14 @@
-//
-// Created by denis on 6/21/2026.
-//
+#pragma once
+#include <stdbool.h>
 
-#ifndef ASM_MOUSE_H
-#define ASM_MOUSE_H
+#include "../include/stdint.h"
 
-#endif //ASM_MOUSE_H
+static inline bool isRightPressed(uint8_t state) {
+    return (state & 0x02) != 0;
+}
+static inline bool isLeftPressed(uint8_t state) {
+    return (state & 0x01) != 0;
+}
+static inline bool isMiddlePressed(uint8_t state) {
+    return (state & 0x04) != 0;
+}
