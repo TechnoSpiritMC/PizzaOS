@@ -10,11 +10,27 @@
 #include "memory/memory.h"
 #include "stdlib/serial.h"
 #include "display/display.h"
+#include "io/mouse.h"
 #include "memory/malloc.h"
 
 #include "stdlib/stdio.h"
 
 extern void start_sample_app();
+
+static uint16_t p_mouse_x, p_mouse_y = 0;
+
+void onMouseMoved(uint8_t flags) {
+    serial_printf("Got mouse heartbeat. Mouse is at: (%x, %x)\r\n", __mx, __my);
+
+    draw_pixel(__mx, __my, 0x00ffffff);
+
+    if (p_mouse_x != __mx || p_mouse_y != __my) {
+        draw_pixel(p_mouse_x, p_mouse_y, 0x00ffffff);
+    }
+
+    p_mouse_x = __mx;
+    p_mouse_y =__my;
+}
 
 void kmain(uint32_t magic, struct multiboot_info* bootInfo);
 
@@ -35,6 +51,10 @@ void kmain(uint32_t magic, struct multiboot_info* bootInfo) {
     initIdt();
     initTimer();
     initKeyboard();
+    init_mouse();
+    mouse_add_listener(onMouseMoved);
+
+    asm volatile("sti");
 
     print("Initializing memory..\r\n");
     serial_printf("Initializing memory!\r\n");
@@ -82,6 +102,8 @@ void kmain(uint32_t magic, struct multiboot_info* bootInfo) {
     testDisplayAndFonts();
 
     start_sample_app();
+
+    while (1) {}
 
 #if newConsole
     print("Starting console in 3 seconds...\r\n");
