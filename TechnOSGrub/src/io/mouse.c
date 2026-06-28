@@ -35,7 +35,7 @@ void init_mouse() {
 uint8_t mouse_packet[3];
 uint8_t mouse_packet_size = 0;
 
-uint16_t mx, my = 0;
+uint16_t __mx, __my = 0;
 
 void* listeners[64];
 uint8_t listener_count = 0;
@@ -59,7 +59,7 @@ void mouse_notify_listeners(uint8_t flags) {
     }
 }
 
-void mouseHandler() {
+void mouseHandler(struct InterruptRegisters *r) {
     mouse_packet[mouse_packet_size++] = inPortB(0x60);
 
     if (mouse_packet_size < 3) return;
@@ -67,15 +67,15 @@ void mouseHandler() {
     int8_t x = (int8_t)mouse_packet[1];
     int8_t y = (int8_t)mouse_packet[2];
 
-    mx += x;
-    my += y;
+    __mx += x;
+    __my += y;
 
     mouse_notify_listeners(mouse_packet[0]&0b111);
 
-    if (mx < 0) mx = 0;
-    if (my < 0) my = 0;
-    if (mx > SCREEN_WIDTH) mx = SCREEN_WIDTH;
-    if (my > SCREEN_HEIGHT) my = SCREEN_HEIGHT;
+    if (__mx < 0) __mx = 0;
+    if (__my < 0) __my = 0;
+    if (__mx > SCREEN_WIDTH) __mx = SCREEN_WIDTH;
+    if (__my > SCREEN_HEIGHT) __my = SCREEN_HEIGHT;
 
     mouse_packet_size = 0;
 }
