@@ -1,7 +1,6 @@
 #pragma once
 
 extern "C" {
-    #include "screen.h"
     #include "display.h"
 }
 

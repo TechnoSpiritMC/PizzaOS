@@ -1,30 +1,15 @@
+#include "screen.hpp"
+
 extern "C" {
-    #include "screen.hpp"
-#include <stdbool.h>
     #include "display.h"
 }
 
 namespace Screen {
-    class Color {
-
-    public:
-        uint8_t r, g, b;
-        constexpr Color(uint8_t r, uint8_t g, uint8_t b) : r(r), g(g), b(b) {}
-        constexpr Color() : Color(0, 0, 0) {}
-        constexpr Color(uint8_t gray) : Color(gray, gray, gray) {}
-
-        ~Color() = default;
-
-        uint32_t toRGB() const {
-            return (r << 16) | (g << 8) | b;
-        }
-    };
-
-    static void drawPixel(int x, int y, Color color) {
+    void drawPixel(int x, int y, Color color) {
         draw_pixel(x, y, color.toRGB());
     }
 
-    static void drawRect(int x, int y, int width, int height, Color color) {
+    void drawRect(int x, int y, int width, int height, Color color) {
         for (u16 _x = 0; _x < width; _x++) {
             for (u16 _y = 0; _y < height; _y++) {
                 draw_pixel(x + _x, y + _y, color.toRGB());
@@ -32,16 +17,16 @@ namespace Screen {
         }
     }
 
-    static void clearScreen() {
+    void clearScreen() {
         drawRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, Color(0));
     }
 
-    static void drawRectWithBorders(int x, int y, int width, int height, int borderWidth, Color color, Color borderColor) {
+    void drawRectWithBorders(int x, int y, int width, int height, int borderWidth, Color color, Color borderColor) {
         drawRect(x, y, width, height, borderColor);
         drawRect(x + borderWidth, y + borderWidth, width - borderWidth * 2, height - borderWidth * 2, color);
     }
 
-    static void drawLine(int x1, int y1, int x2, int y2, bool antialias, int width, Color color) {
+    void drawLine(int x1, int y1, int x2, int y2, bool antialias, int width, Color color) {
         __drawLine(x1, y1, x2, y2, width, color, antialias);
     }
 
