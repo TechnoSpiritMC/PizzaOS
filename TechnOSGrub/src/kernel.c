@@ -1,8 +1,8 @@
-#include "disk/disk.h"
+#include "io/disk/disk.h"
 #include "include/vga.h"
 #include "include/gdt.h"
 #include "interrupts/idt.h"
-#include "stdlib/keyboard.h"
+#include "io/keyboard.h"
 #include "timer/timer.h"
 #include "include/console.h"
 #include "include/multiboot.h"
@@ -13,6 +13,8 @@
 #include "memory/malloc.h"
 
 #include "stdlib/stdio.h"
+
+extern void start_sample_app();
 
 void kmain(uint32_t magic, struct multiboot_info* bootInfo);
 
@@ -78,6 +80,8 @@ void kmain(uint32_t magic, struct multiboot_info* bootInfo) {
     free(my_addr);
     
     testDisplayAndFonts();
+
+    start_sample_app();
 
 #if newConsole
     print("Starting console in 3 seconds...\r\n");
