@@ -1,69 +1,123 @@
-SRC = src
-BUILD = build
+# =========================
+# Directories
+# =========================
+SRC := src
+BUILD := build
 
-# Compilers
-gcc = /usr/opt/cross/bin/i686-elf-gcc
-gxx = /usr/opt/cross/bin/i686-elf-g++
+# =========================
+# Toolchain
+# =========================
+gcc := /usr/opt/cross/bin/i686-elf-gcc
+gxx := /usr/opt/cross/bin/i686-elf-g++
+ld  := ld
 
-# Compiler Flags
-CFLAGS = -ffreestanding -Wall -Wextra -g -O2
-CXXFLAGS = -ffreestanding -Wall -Wextra -g -O2 -fno-exceptions -fno-rtti
+NASM := nasm
 
-all: gxx gcc asm ld iso
+# =========================
+# Flags
+# =========================
+CFLAGS := -ffreestanding -Wall -Wextra -g -O2
+CXXFLAGS := -ffreestanding -Wall -Wextra -g -O2 -fno-exceptions -fno-rtti
 
-# 1. Added build/oop.o to the objects list
-ld:
-	ld -m elf_i386 -T linker.ld -o $(BUILD)/kernel \
-	$(BUILD)/boot.o $(BUILD)/kernel.o $(BUILD)/vga.o \
-	$(BUILD)/gdts.o $(BUILD)/gdt.o $(BUILD)/util.o \
-	$(BUILD)/idt.o $(BUILD)/idts.o $(BUILD)/timer.o \
-	$(BUILD)/stdio.o $(BUILD)/keyboard.o $(BUILD)/console.o \
-	$(BUILD)/memory.o $(BUILD)/kmalloc.o $(BUILD)/serial.o \
-	$(BUILD)/display.o $(BUILD)/disk.o $(BUILD)/malloc.o \
-	$(BUILD)/oop.o $(BUILD)/mouse.o $(BUILD)/IApplication.o \
-	$(BUILD)/screen.o $(BUILD)/list.o $(BUILD)/SampleApp.o
+# =========================
+# Auto parallel build
+# =========================
+MAKEFLAGS += -j$(shell nproc)
 
-asm: $(SRC)/asm/boot.asm $(SRC)/asm/gdt.asm
-	nasm -f elf32 $(SRC)/asm/boot.asm       -o $(BUILD)/boot.o
-	nasm -f elf32 $(SRC)/asm/gdt.asm        -o $(BUILD)/gdts.o
-	nasm -f elf32 $(SRC)/interrupts/idt.asm -o $(BUILD)/idts.o
+# =========================
+# Source files (EASY TO EDIT)
+# Add new files HERE ONLY
+# =========================
 
-# 2. Added a target for compiling your C++ files
-gxx: $(SRC)/memory/oop.cpp
-	$(gxx) $(CXXFLAGS) -c $(SRC)/memory/oop.cpp -o $(BUILD)/oop.o
-	$(gxx) $(CXXFLAGS) -c $(SRC)/display/screen.cpp -o $(BUILD)/screen.o
-	$(gxx) $(CXXFLAGS) -c $(SRC)/apps/IApplication.cpp -o $(BUILD)/IApplication.o
-	$(gxx) $(CXXFLAGS) -c $(SRC)/apps/SampleApp.cpp -o $(BUILD)/SampleApp.o
-	$(gxx) $(CXXFLAGS) -c $(SRC)/stdlib/list.cpp -o $(BUILD)/list.o
+C_SOURCES := \
+kernel.c \
+vga.c \
+gdt.c \
+util.c \
+interrupts/idt.c \
+timer/timer.c \
+stdlib/stdio.c \
+stdlib/serial.c \
+console.c \
+memory/memory.c \
+memory/kmalloc.c \
+memory/malloc.c \
+display/display.c \
+io/disk/disk.c \
+io/keyboard.c \
+io/mouse.c
 
-gcc: $(SRC)/kernel.c $(SRC)/vga.c $(SRC)/gdt.c $(SRC)/util.c $(SRC)/interrupts/idt.c $(SRC)/timer/timer.c $(SRC)/stdlib/stdio.c $(SRC)/stdlib/serial.c $(SRC)/console.c $(SRC)/memory/memory.c $(SRC)/memory/kmalloc.c $(SRC)/memory/malloc.c $(SRC)/display/display.c $(SRC)/io/disk/disk.c
-	$(gcc) $(CFLAGS) -c $(SRC)/kernel.c           -o $(BUILD)/kernel.o
-	$(gcc) $(CFLAGS) -c $(SRC)/vga.c              -o $(BUILD)/vga.o
-	$(gcc) $(CFLAGS) -c $(SRC)/gdt.c              -o $(BUILD)/gdt.o
-	$(gcc) $(CFLAGS) -c $(SRC)/util.c             -o $(BUILD)/util.o
-	$(gcc) $(CFLAGS) -c $(SRC)/interrupts/idt.c   -o $(BUILD)/idt.o
-	$(gcc) $(CFLAGS) -c $(SRC)/timer/timer.c      -o $(BUILD)/timer.o
-	$(gcc) $(CFLAGS) -c $(SRC)/stdlib/stdio.c     -o $(BUILD)/stdio.o
-	$(gcc) $(CFLAGS) -c $(SRC)/io/keyboard.c      -o $(BUILD)/keyboard.o
-	$(gcc) $(CFLAGS) -c $(SRC)/stdlib/serial.c    -o $(BUILD)/serial.o
-	$(gcc) $(CFLAGS) -c $(SRC)/console.c          -o $(BUILD)/console.o
-	$(gcc) $(CFLAGS) -c $(SRC)/memory/memory.c    -o $(BUILD)/memory.o
-	$(gcc) $(CFLAGS) -c $(SRC)/memory/kmalloc.c   -o $(BUILD)/kmalloc.o
-	$(gcc) $(CFLAGS) -c $(SRC)/memory/malloc.c    -o $(BUILD)/malloc.o
-	$(gcc) $(CFLAGS) -c $(SRC)/display/display.c  -o $(BUILD)/display.o
-	$(gcc) $(CFLAGS) -c $(SRC)/io/disk/disk.c     -o $(BUILD)/disk.o
-	$(gcc) $(CFLAGS) -c $(SRC)/io/mouse.c         -o $(BUILD)/mouse.o
+CPP_SOURCES := \
+memory/oop.cpp \
+display/screen.cpp \
+apps/IApplication.cpp \
+apps/SampleApp.cpp \
+stdlib/list.cpp
 
+ASM_SOURCES := \
+asm/boot.asm \
+asm/gdt.asm \
+interrupts/idts.asm
+
+# =========================
+# Object files (auto generated)
+# =========================
+C_OBJS    := $(C_SOURCES:%.c=$(BUILD)/%.o)
+CPP_OBJS  := $(CPP_SOURCES:%.cpp=$(BUILD)/%.o)
+ASM_OBJS  := $(ASM_SOURCES:%.asm=$(BUILD)/%.o)
+
+OBJS := $(C_OBJS) $(CPP_OBJS) $(ASM_OBJS)
+
+# =========================
+# Default target
+# =========================
+all: iso
+
+# =========================
+# Build kernel
+# =========================
+$(BUILD)/kernel: $(OBJS)
+	$(ld) -m elf_i386 -T linker.ld -o $@ $^
+
+# =========================
+# C compilation rule
+# =========================
+$(BUILD)/%.o: $(SRC)/%.c
+	@mkdir -p $(dir $@)
+	$(gcc) $(CFLAGS) -c $< -o $@
+
+# =========================
+# C++ compilation rule
+# =========================
+$(BUILD)/%.o: $(SRC)/%.cpp
+	@mkdir -p $(dir $@)
+	$(gxx) $(CXXFLAGS) -c $< -o $@
+
+# =========================
+# ASM compilation rule
+# =========================
+$(BUILD)/%.o: $(SRC)/%.asm
+	@mkdir -p $(dir $@)
+	$(NASM) -f elf32 $< -o $@
+
+# =========================
+# ISO generation
+# =========================
 iso: $(BUILD)/kernel
 	cp $(BUILD)/kernel Pizza/boot/kernel
 	grub-mkrescue -o Pizza.iso Pizza
 
+# =========================
+# Cleanup
+# =========================
 clean:
 	clear
 	rm -rf $(BUILD)/*
 
-run:
-	make
+# =========================
+# Run targets
+# =========================
+runnodrive: iso
 	qemu-system-i386 -cdrom Pizza.iso
 
 disk.img:
@@ -72,6 +126,5 @@ disk.img:
 clean-disk:
 	rm -f disk.img
 
-rundrive: disk.img
-	make
-	qemu-system-i386 -cdrom Pizza.iso -drive file=disk.img,format=raw,if=ide
+rundrive: disk.img iso
+	qemu-system-i386 -cdrom Pizza.iso -drive file=disk.img,format=raw,if=ide -display gtk -serial vc
