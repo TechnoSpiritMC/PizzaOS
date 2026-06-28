@@ -11,7 +11,7 @@ namespace Application {
 
     public:
         // Pass the app name up to the base IApplication constructor
-        DemoApp() : IApplication((char*)"Demo Panel") {}
+        DemoApp() : IApplication((char*)"DEMO PANEL") {}
         ~DemoApp() override;
 
         // Implement the mandatory lifecycle hooks

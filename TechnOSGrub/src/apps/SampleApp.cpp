@@ -3,11 +3,14 @@
 extern "C" {
     #include "../include/stdint.h"
     #include "../io/mouse.h"
+    #include "../stdlib/serial.h"
 }
 
 extern "C" void start_sample_app() {
     // Inside a C++ file, this syntax is completely valid
-    Application::DemoApp app;
+    serial_printf("Creating app instance.\r\n");
+    Application::DemoApp app = Application::DemoApp();
+    serial_printf("App instance created. Running it...\r\n");
     app.run(0);
 }
 
@@ -27,25 +30,32 @@ void onExitPressed(uint8_t flags) {
 namespace Application {
 
     void DemoApp::main(uint32_t flags) {
+        LOG_LINE();
         (void)flags;
 
+        LOG_LINE();
         // 1. Instantiate the UI buttons inside the window dimensions
         // Window is 320x240, positioned at 0,0 by default in your framework
-        clickMeButton = new Button(20, 40, 100, 30, "Click Me", (const void*)onClickMePressed, *this);
-        exitButton    = new Button(130, 40, 100, 30, "Exit App", (const void*)onExitPressed, *this);
+        clickMeButton = new Button(20, 40, 100, 30, "CLICK ME", (const void*)onClickMePressed, *this);
+        LOG_LINE();
+        exitButton    = new Button(130, 40, 100, 30, "EXIT APP", (const void*)onExitPressed, *this);
 
         // 2. Register these components into the base class elements list
         // so the system handles refreshing/drawing them automatically
+        LOG_LINE();
         List::list_append(this->elements, (void*)clickMeButton);
+        LOG_LINE();
         List::list_append(this->elements, (void*)exitButton);
 
         // 3. Force initial rendering of all elements inside the framework loop
+        LOG_LINE();
         this->onMouseMove();
 
-        while (running) {}
+        LOG_LINE();
+        while (true) {}
 
+        LOG_LINE();
         window->close();
-        delete this;
     }
 
     void DemoApp::userMouseEventHandler(uint16_t mouse_x, uint16_t mouse_y, uint8_t mouse_flags) {
