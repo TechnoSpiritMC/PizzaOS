@@ -61,9 +61,12 @@ namespace Application {
     }
 
     void Button::redrawWhenInside(uint16_t target_x, uint16_t target_y) { // Removed override keyword
+        LOG_LINE();
+        serial_printf("Drawing button.\r\n");
         if (isInside(target_x, target_y)) {
             Button::draw(application);
         }
+        serial_printf("Finished drawing button.\r\n");
     }
 
     // ==========================================
@@ -82,12 +85,14 @@ namespace Application {
     }
 
     void DisplaySection::redrawWhenInside(uint16_t target_x, uint16_t target_y) { // Removed override keyword
+        LOG_LINE();
+        serial_printf("Drawing Display section.\r\n");
         for (uint32_t i = 0; i < elements.size; i++) {
+            serial_printf("Drawing element %x of display section.\r\n", i);
             DisplayElement* element = (DisplayElement*)elements.items[i];
-            if (element->isInside(target_x, target_y)) {
-                element->redrawWhenInside(target_x, target_y);
-            }
+            element->redrawWhenInside(target_x, target_y);
         }
+        serial_printf("Finished section button.\r\n");
     }
 
     List::ArrayList* DisplaySection::getElements() {
@@ -109,13 +114,16 @@ namespace Application {
         drawRectWithBorders(x, y, width, height, 1, Color(255, 255, 255), Color(192, 192, 200));
         drawRect(x + 1, y + 21, width - 2, height - 22, Color(0, 0, 0));
         drawRect(x + 1, y + 1, width - 2, 20, Color(192, 192, 200));
-        draw_string(x + 3, y + 3 + font_height(MONOSPACE1), application.name, Color(0).toRGB(), Color(192, 192, 200).toRGB(), MONOSPACE1);
+        draw_string(x + 3, y - 3 + font_height(MONOSPACE1), application.name, Color(0).toRGB(), Color(192, 192, 200).toRGB(), MONOSPACE1);
     }
 
     void Window::redrawWhenInside(uint16_t target_x, uint16_t target_y) { // Removed override keyword
+        LOG_LINE();
+        serial_printf("Drawing window.\r\n");
         if (isInside(target_x, target_y)) {
             Window::draw(application);
         }
+        serial_printf("Finished window button.\r\n");
     }
 
     void Window::close() {
@@ -138,13 +146,25 @@ namespace Application {
     }
 
     void IApplication::run(uint32_t flags) {
-        List::list_init(elements);
+        LOG_LINE();
+        uint32_t struct_addr = malloc(sizeof(List::ArrayList));
+        this->elements = (List::ArrayList*)struct_addr;
 
+        // 2. Now pass it safely to your initialization function
+        List::list_init(this->elements, 1);
+
+        LOG_LINE();
         window = new Window(0, 0, 320, 240, *this);
+
+        LOG_LINE();
         mouse_add_listener((void*)this);
 
+        LOG_LINE();
+        serial_printf("[IApplication.cpp] Starting app.\r\n");
         main(flags);
 
+        LOG_LINE();
+        serial_printf("[IApplication.cpp] Closing app.\r\n");
         window->close();
     }
 
@@ -156,9 +176,12 @@ namespace Application {
     }
 
     void IApplication::onMouseMove() {
+        LOG_LINE();
         if (!elements) return;
 
         for (uint32_t i = 0; i < elements->size; i++) {
+            LOG_LINE();
+            serial_printf("Currently at element: %x\r\n", i);
             ((DisplayElement*)elements->items[i])->redrawWhenInside(__mx, __my);
         }
     }
