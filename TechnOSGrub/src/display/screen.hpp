@@ -2,7 +2,6 @@
 
 extern "C" {
     #include "screen.h"
-    #include <stdbool.h>
     #include "display.h"
 }
 

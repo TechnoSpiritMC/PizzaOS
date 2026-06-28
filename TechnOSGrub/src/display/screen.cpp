@@ -87,7 +87,7 @@ namespace Screen {
     float __sqrt(float x) {
         if (x <= 0) return 0;
         float guess = x;
-        for (int i = 0; i < 8; i++) {
+        for (int i = 0; i < 16; i++) {
             guess = 0.5f * (guess + x / guess);
         }
         return guess;
