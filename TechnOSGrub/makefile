@@ -20,7 +20,8 @@ ld:
 	$(BUILD)/stdio.o $(BUILD)/keyboard.o $(BUILD)/console.o \
 	$(BUILD)/memory.o $(BUILD)/kmalloc.o $(BUILD)/serial.o \
 	$(BUILD)/display.o $(BUILD)/disk.o $(BUILD)/malloc.o \
-	$(BUILD)/oop.o $(BUILD)/mouse.o
+	$(BUILD)/oop.o $(BUILD)/mouse.o $(BUILD)/IApplication.o \
+	$(BUILD)/screen.o $(BUILD)/list.o $(BUILD)/SampleApp.o
 
 asm: $(SRC)/asm/boot.asm $(SRC)/asm/gdt.asm
 	nasm -f elf32 $(SRC)/asm/boot.asm       -o $(BUILD)/boot.o
@@ -30,6 +31,10 @@ asm: $(SRC)/asm/boot.asm $(SRC)/asm/gdt.asm
 # 2. Added a target for compiling your C++ files
 gxx: $(SRC)/memory/oop.cpp
 	$(gxx) $(CXXFLAGS) -c $(SRC)/memory/oop.cpp -o $(BUILD)/oop.o
+	$(gxx) $(CXXFLAGS) -c $(SRC)/display/screen.cpp -o $(BUILD)/screen.o
+	$(gxx) $(CXXFLAGS) -c $(SRC)/apps/IApplication.cpp -o $(BUILD)/IApplication.o
+	$(gxx) $(CXXFLAGS) -c $(SRC)/apps/SampleApp.cpp -o $(BUILD)/SampleApp.o
+	$(gxx) $(CXXFLAGS) -c $(SRC)/stdlib/list.cpp -o $(BUILD)/list.o
 
 gcc: $(SRC)/kernel.c $(SRC)/vga.c $(SRC)/gdt.c $(SRC)/util.c $(SRC)/interrupts/idt.c $(SRC)/timer/timer.c $(SRC)/stdlib/stdio.c $(SRC)/stdlib/serial.c $(SRC)/console.c $(SRC)/memory/memory.c $(SRC)/memory/kmalloc.c $(SRC)/memory/malloc.c $(SRC)/display/display.c $(SRC)/io/disk/disk.c
 	$(gcc) $(CFLAGS) -c $(SRC)/kernel.c           -o $(BUILD)/kernel.o
