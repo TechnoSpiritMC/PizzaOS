@@ -1,4 +1,4 @@
-#include "../stdlib/keyboard.h"
+#include "../io/keyboard.h"
 #include "../stdlib/stdio.h"
 
 #include "../include/util.h"
