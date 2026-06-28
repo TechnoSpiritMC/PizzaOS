@@ -1,12 +1,23 @@
 #include "list.hpp"
 
-namespace List {
+extern "C" {
+#include "../include/util.h"
+#include "../stdlib/serial.h"
+}
 
+namespace List {
     void list_init(ArrayList* list, uint32_t initial_capacity) {
+
+        serial_printf("Got list pointer: %x \r\n", list);
+
+        LOG_LINE();
         list->capacity = initial_capacity;
+        LOG_LINE();
         list->size = 0;
 
+        LOG_LINE();
         uint32_t bytes_to_allocate = list->capacity * sizeof(void*);
+        LOG_LINE();
         list->items = (void**)malloc(bytes_to_allocate);
     }
 

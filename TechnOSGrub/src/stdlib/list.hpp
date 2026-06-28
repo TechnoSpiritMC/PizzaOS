@@ -17,8 +17,8 @@ namespace List {
     };
 
     // Library API
-    void list_init(ArrayList* list, uint32_t initial_capacity = 4);
-    void list_append(ArrayList* list, void* item);
-    void* list_get(ArrayList* list, uint32_t index);
-    void list_free(ArrayList* list);
+    void list_init(struct ArrayList* list, uint32_t initial_capacity = 4);
+    void list_append(struct ArrayList* list, void* item);
+    void* list_get(struct ArrayList* list, uint32_t index);
+    void list_free(struct ArrayList* list);
 }
