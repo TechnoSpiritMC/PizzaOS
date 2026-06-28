@@ -3,8 +3,8 @@
 #include <stdbool.h>
 
 #include "../include/stdint.h"
-#include "../stdlib/string.h"
-#include "../include/util.h"
+#include "../../stdlib/string.h"
+#include "../../include/util.h"
 
 struct __attribute__((packed)) DirectoryEntry {
     char name[11];

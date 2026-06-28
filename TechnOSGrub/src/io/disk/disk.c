@@ -1,7 +1,7 @@
 #include "disk.h"
 
-#include "../include/util.h"
-#include "../stdlib/serial.h"
+#include "../../include/util.h"
+#include "../../stdlib/serial.h"
 
 #define DATA_START_LBA 0x500
 #define FAT_START_LBA 0x100
