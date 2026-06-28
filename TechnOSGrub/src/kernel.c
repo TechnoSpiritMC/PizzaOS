@@ -25,7 +25,7 @@ void onMouseMoved(uint8_t flags) {
     draw_pixel(__mx, __my, 0x00ffffff);
 
     if (p_mouse_x != __mx || p_mouse_y != __my) {
-        draw_pixel(p_mouse_x, p_mouse_y, 0x00ffffff);
+        draw_pixel(p_mouse_x, p_mouse_y, 0x00000022);
     }
 
     p_mouse_x = __mx;
@@ -51,8 +51,8 @@ void kmain(uint32_t magic, struct multiboot_info* bootInfo) {
     initIdt();
     initTimer();
     initKeyboard();
-    init_mouse();
-    mouse_add_listener(onMouseMoved);
+    //init_mouse();
+    //mouse_add_listener(onMouseMoved);
 
     asm volatile("sti");
 
@@ -101,6 +101,7 @@ void kmain(uint32_t magic, struct multiboot_info* bootInfo) {
     
     testDisplayAndFonts();
 
+    serial_printf("###################################\r\nSTARTING APPS:\r\n\n\n\n\n");
     start_sample_app();
 
     while (1) {}
