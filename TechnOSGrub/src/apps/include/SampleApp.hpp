@@ -17,6 +17,7 @@ namespace Application {
         // Implement the mandatory lifecycle hooks
         void main(uint32_t flags) override;
         void userMouseEventHandler(uint16_t x, uint16_t y, uint8_t mouse_flags) override;
+        void redrawAll();
     };
 
 }

@@ -7,23 +7,21 @@ extern "C" {
 }
 
 extern "C" void start_sample_app() {
-    // Inside a C++ file, this syntax is completely valid
     serial_printf("Creating app instance.\r\n");
     Application::DemoApp app = Application::DemoApp();
     serial_printf("App instance created. Running it...\r\n");
     app.run(0);
 }
 
-static bool running = true;
+bool running = true;
 
-// Example callback functions matching your "const void* action" signature
 void onClickMePressed(uint8_t flags) {
     (void)flags;
-    // Do something inside your OS kernel when the button clicks!
 }
 
 void onExitPressed(uint8_t flags) {
     (void)flags;
+    LOG_LINE();
     running = false;
 }
 
@@ -33,57 +31,62 @@ namespace Application {
         LOG_LINE();
         (void)flags;
 
-        LOG_LINE();
-        // 1. Instantiate the UI buttons inside the window dimensions
-        // Window is 320x240, positioned at 0,0 by default in your framework
+        running = true;
+
         clickMeButton = new Button(20, 40, 100, 30, "CLICK ME", (const void*)onClickMePressed, *this);
-        LOG_LINE();
         exitButton    = new Button(130, 40, 100, 30, "EXIT APP", (const void*)onExitPressed, *this);
 
-        // 2. Register these components into the base class elements list
-        // so the system handles refreshing/drawing them automatically
-        LOG_LINE();
+        exitButton->setBlocked(true);
+
         List::list_append(this->elements, (void*)clickMeButton);
-        LOG_LINE();
         List::list_append(this->elements, (void*)exitButton);
 
-        // 3. Force initial rendering of all elements inside the framework loop
-        LOG_LINE();
         this->onMouseMove();
 
-        LOG_LINE();
-        while (true) {}
-
-        LOG_LINE();
+        serial_printf("App is running. Waiting for user interaction... Running is %d\r\n", running);
+        while (running) {
+            serial_printf("Running is %d\r", running);
+        }
         window->close();
     }
 
     void DemoApp::userMouseEventHandler(uint16_t mouse_x, uint16_t mouse_y, uint8_t mouse_flags) {
-        // This receives raw coordinates whenever the mouse moves or clicks inside the window boundaries.
-
-        // Check if the user is hovering over or pressing our components
         if (clickMeButton->isInside(mouse_x, mouse_y)) {
+            LOG_LINE();
             clickMeButton->setHovered(true);
 
             if (isLeftPressed(mouse_flags)) {
+                LOG_LINE();
+                serial_printf("Click Me button pressed. Executing action...\r\n");
                 clickMeButton->press(mouse_flags);
             }
         } else {
+            LOG_LINE();
             clickMeButton->setHovered(false);
         }
 
         if (exitButton->isInside(mouse_x, mouse_y)) {
+            LOG_LINE();
             exitButton->setHovered(true);
             if (isLeftPressed(mouse_flags)) {
+                LOG_LINE();
+                serial_printf("Exit button pressed. Exiting app...\r\n");
                 exitButton->press(mouse_flags);
             }
         } else {
+            LOG_LINE();
             exitButton->setHovered(false);
         }
     }
 
+    void DemoApp::redrawAll() {
+        app_redraw_all_elements();
+    }
+
     DemoApp::~DemoApp() {
+        serial_printf("Destroying app instance.\r\n");
         if (clickMeButton) delete clickMeButton;
         if (exitButton) delete exitButton;
+        serial_printf("App instance destroyed.\r\n");
     }
 }
