@@ -17,25 +17,6 @@
 
 extern void start_sample_app();
 
-static uint16_t p_mouse_x, p_mouse_y = 0;
-
-void onMouseMoved(uint8_t flags) {
-    serial_printf("Got mouse heartbeat. Mouse is at: (%x, %x)\r\n", __mx, __my);
-
-    LOG_LINE();
-    draw_pixel(CLAMP(__mx, 0, 319), CLAMP(__my, 0, 239), 0x00ffffff);
-
-    LOG_LINE();
-    if (p_mouse_x != __mx || p_mouse_y != __my) {
-        LOG_LINE();
-        draw_pixel(CLAMP(p_mouse_x, 0, 319), CLAMP(p_mouse_y, 0, 239), 0x00000022);
-    }
-
-    LOG_LINE();
-    p_mouse_x = __mx;
-    p_mouse_y =__my;
-}
-
 void kmain(uint32_t magic, struct multiboot_info* bootInfo);
 
 void kmain(uint32_t magic, struct multiboot_info* bootInfo) {
@@ -56,9 +37,8 @@ void kmain(uint32_t magic, struct multiboot_info* bootInfo) {
     initTimer();
     initKeyboard();
     init_mouse();
-    mouse_add_listener(onMouseMoved);
 
-    asm volatile("sti");
+    // asm volatile("sti");
 
     print("Initializing memory..\r\n");
     serial_printf("Initializing memory!\r\n");
@@ -102,10 +82,8 @@ void kmain(uint32_t magic, struct multiboot_info* bootInfo) {
 
     free(buf_addr);
     free(my_addr);
-    
-    testDisplayAndFonts();
 
-    serial_printf("###################################\r\nSTARTING APPS:\r\n\n\n\n\n");
+    calibrateMouse();
     start_sample_app();
 
     while (1) {}
