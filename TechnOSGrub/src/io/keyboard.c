@@ -1,11 +1,16 @@
 #include "../io/keyboard.h"
 #include "../stdlib/stdio.h"
+#include "../stdlib/serial.h"
 
 #include "../include/util.h"
 #include "../include/vga.h"
 #include "../interrupts/idt.h"
 #include "../include/stdint.h"
 #include "../include/console.h"
+
+#include "../display/display.h"
+
+#include "mouse.h"
 
 bool capsOn;
 bool capsLock;
@@ -106,7 +111,7 @@ UNKNOWN,UNKNOWN,UNKNOWN,UNKNOWN,UNKNOWN,UNKNOWN,UNKNOWN
 
 void displayLanguageName() {
     for (int i = 0; i < 5; i++) {
-        putToCoords(75+i, 24, getLanguageShortName(language)[i], (color8_Bright_White << 8) | (color8_Blue << 12));
+        draw_char(75+i*8, 500, getLanguageShortName(language)[i], 0x00ffffff, 0x00000000, MONOSPACE1, DISPLAY_PRIVILEDGE_LOW);
     }
 }
 
@@ -127,14 +132,20 @@ char getCharForLanguage(uint8_t language, bool caps, char characterIdx) {
 }
 
 void initKeyboard() {
+    LOG_LINE();
     capsOn   = false;
     capsLock = false;
     ctrlPressed = false;
     language = KB_LANGUAGE_AZERTY;
 
+    LOG_LINE();
     irq_install_handler(1, &keyboardHandler);
+
+    LOG_LINE();
     printf("Initialized Keyboard with default layout: %s", getLanguageName(language));
 
+
+    LOG_LINE();
     setLanguage(language);
 }
 
@@ -142,22 +153,33 @@ void setLanguage(uint8_t languageIndex) {
     language = availableLanguagesInternal[languageIndex];
 
 
-#if newConsole
-    char buffer[25] = "";
-    strConcat(buffer, "Language set to ", getLanguageName(language));
+// #if newConsole
+//     char buffer[25] = "";
+//     strConcat(buffer, "Language set to ", getLanguageName(language));
 
-    sendInfo(buffer);
-#else
-    printf("\r\nLanguage set to %s\r\n", getLanguageName(language));
-#endif
+//     sendInfo(buffer);
+// #else
+//     printf("\r\nLanguage set to %s\r\n", getLanguageName(language));
+// #endif
 
 
-    displayLanguageName();
+     displayLanguageName();
 }
 
 void keyboardHandler(struct InterruptRegisters* regs) {
-    char scanCode = inPortB(0x60) & 0x7F; // What key has been pressed.
-    char press = inPortB(0x60) & 0x80;    // Pressed down or released.
+
+    uint8_t status = inPortB(0x64);
+    
+    // If Bit 5 is 1, this data belongs to the mouse. Leave it alone!
+    if (status & 0x20) {
+        return; 
+    }
+
+    uint8_t rawScanCode = (uint8_t)inPortB(0x60); // Read the controller once; keyboard and mouse share this buffer.
+    uint8_t scanCode = rawScanCode & 0x7F; // What key has been pressed.
+    uint8_t press = rawScanCode & 0x80;    // Pressed down or released.
+
+    serial_printf("ScanCode: %x, Press: %x\r\n", scanCode, press);
 
     // printf("Pressed: %i", scanCode);
 
@@ -207,7 +229,7 @@ void keyboardHandler(struct InterruptRegisters* regs) {
             break;
 
         case 29:
-            if (ctrlPressed && press == -128) {
+            if (ctrlPressed && press != 0) {
                 ctrlPressed = false;
             }
             else if (!ctrlPressed && press == 0) {
@@ -220,6 +242,16 @@ void keyboardHandler(struct InterruptRegisters* regs) {
                 const char c = getCharForLanguage(language, capsOn || capsLock, scanCode);
                 if ((c == 'l' || c == 'L') && ctrlPressed) {
                     setLanguage((language + 1) % 2);
+                    return;
+                }
+
+                if ((c == 'm' || c == 'M') && ctrlPressed) {
+                    calibrateMouse();
+                    return;
+                }
+
+                if (c == '\n' && ctrlPressed) {
+                    completeMouseCalibration();
                     return;
                 }
 
