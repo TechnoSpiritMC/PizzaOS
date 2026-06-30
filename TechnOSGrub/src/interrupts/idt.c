@@ -148,7 +148,7 @@ void isr_handler(struct InterruptRegisters* regs){
         print(exception_messages[regs->int_no]);
         print("\n");
         print("Exception! System Halted\n");
-        draw_string(100, 50, exception_messages[regs->int_no], 0x00FFFFFF, 0x00000022, MONOSPACE1);
+        draw_string(100, 50, exception_messages[regs->int_no], 0x00FFFFFF, 0x00000022, MONOSPACE1, DISPLAY_PRIVILEDGE_CRITICAL);
 
         serial_printf("A FAKIN INTERRUPT HAS HAPPENED YOU IDIOT: %x (%s)", regs->int_no, exception_messages[regs->int_no]);
 
