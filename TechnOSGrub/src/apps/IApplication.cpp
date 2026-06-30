@@ -16,6 +16,14 @@ static constexpr uint8_t BUTTON_BORDER_B[] = { 163, 229,  48, 130, 150 };
 #define BUTTON_BORDER_COLOR(state) \
     Color(BUTTON_BORDER_R[state], BUTTON_BORDER_G[state], BUTTON_BORDER_B[state])
 
+static Application::IApplication* g_current_app = nullptr;
+
+extern "C" void app_mouse_bridge_callback(uint8_t flags) {
+    if (g_current_app) {
+        g_current_app->onMouseEvent(flags);
+    }
+}
+
 namespace Application {
 
     // ==========================================
@@ -149,15 +157,17 @@ namespace Application {
         LOG_LINE();
         uint32_t struct_addr = malloc(sizeof(List::ArrayList));
         this->elements = (List::ArrayList*)struct_addr;
-
-        // 2. Now pass it safely to your initialization function
         List::list_init(this->elements, 1);
 
         LOG_LINE();
         window = new Window(0, 0, 320, 240, *this);
 
+        // Save the instance context so our bridge can find it
+        g_current_app = this; 
+
         LOG_LINE();
-        mouse_add_listener((void*)this);
+        // FIXED: Pass the clean flat C function pointer instead of 'this'
+        mouse_add_listener((void*)app_mouse_bridge_callback);
 
         LOG_LINE();
         serial_printf("[IApplication.cpp] Starting app.\r\n");
@@ -166,12 +176,18 @@ namespace Application {
         LOG_LINE();
         serial_printf("[IApplication.cpp] Closing app.\r\n");
         window->close();
+        
+        // Clean up reference when app exits
+        g_current_app = nullptr; 
     }
 
     void IApplication::onMouseEvent(uint8_t mouse_flags) {
         if (!window || !window->isInside(__mx, __my)) return;
 
+        LOG_LINE();
         userMouseEventHandler(__mx, __my, mouse_flags);
+
+        LOG_LINE();
         onMouseMove();
     }
 
