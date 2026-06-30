@@ -6,8 +6,8 @@
 #define newConsole 0
 
 #define CEIL_DIV(a, b) (((a + b) - 1) / b)
-
-#define LOG_LINE() serial_printf("Execution hit line %d in file %s\r\n", __LINE__, __FILE__)
+#define LOG_LINE() serial_printf("Execution hit line %d in file %s (Function %s)\r\n", __LINE__, __FILE__, __func__)
+#define CLAMP(x, min, max) ((x < min) ? min : ((x > max) ? max : x))
 
 void memset(void *dest, char val, uint32_t count);
 void outPortB(uint16_t port, uint8_t val);
