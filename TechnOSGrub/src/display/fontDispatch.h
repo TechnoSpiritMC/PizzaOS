@@ -40,19 +40,19 @@ static inline const char* font_name(font_id_t font) {
 
 static inline const uint16_t font_glyph_idx(font_id_t font, char c) {
 
-    serial_printf("Trying to get glyph idx for font with id %x (%s). Chose: ", font, font_name(font));
+    //serial_printf("Trying to get glyph idx for font with id %x (%s). Chose: ", font, font_name(font));
 
     switch (font) {
         case MONOSPACE1: {
-            serial_printf("Monospace1\r\n");
+            //serial_printf("Monospace1\r\n");
             return font_monospace1_glyph_idx(c);
         }
         case MONOSPACE2_BIGGER: {
-            serial_printf("Monospace2\r\n");
+            //serial_printf("Monospace2\r\n");
             return font_monospace2_glyph_idx(c);
         }
         default: {
-            serial_printf("Default\r\n");
+            //serial_printf("Default\r\n");
             return font_glyph_idx(DEFAULT_FONT, c);
         }
     }
