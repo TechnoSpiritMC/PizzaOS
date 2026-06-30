@@ -2,6 +2,10 @@
 
 extern "C" {
     #include "display.h"
+
+    void drawLine_C(int x1, int y1, int x2, int y2, bool antialias, int width, uint32_t color, int privilege);
+    void drawRect_C(int x, int y, int width, int height, uint32_t color, int privilege);
+    void drawRectWithBorders_C(int x, int y, int width, int height, int borderWidth, uint32_t color, uint32_t borderColor, int privilege);
 }
 
 namespace Screen {
@@ -26,6 +30,12 @@ namespace Screen {
     void drawRectWithBorders(int x, int y, int width, int height, int borderWidth, Color color, Color borderColor);
     void drawLine(int x1, int y1, int x2, int y2, bool antialias, int width, Color color);
 
+    void drawPixel_p(int x, int y, Color color, int privilege);
+    void drawRect_p(int x, int y, int width, int height, Color color, int privilege);
+    void clearScreen_p(int privilege);
+    void drawRectWithBorders_p(int x, int y, int width, int height, int borderWidth, Color color, Color borderColor, int privilege);
+    void drawLine_p(int x1, int y1, int x2, int y2, bool antialias, int width, Color color, int privilege);
+
     // Internal Helper Signatures
     void __swap(int* a, int* b);
     float __abs(float x);
@@ -36,7 +46,7 @@ namespace Screen {
     float __fPartOfNumber(float x);
     float __rfPartOfNumber(float x);
     float __sqrt(float x);
-    void __drawPixel(int x, int y, float brightness, Color color);
-    void __drawLine(int x0, int y0, int x1, int y1, float width, Color color, bool antialias);
-    void __drawAALine(int x0, int y0, int x1, int y1, Color color);
+    void __drawPixel(int x, int y, float brightness, Color color, int privilege);
+    void __drawLine(int x0, int y0, int x1, int y1, float width, Color color, bool antialias, int privilege);
+    void __drawAALine(int x0, int y0, int x1, int y1, Color color, int privilege);
 }

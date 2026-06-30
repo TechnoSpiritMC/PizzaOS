@@ -11,15 +11,26 @@
 
 uint32_t* framebuffer;
 int fb_pitch;
+int currentRequiredPrivilege = DISPLAY_PRIVILEDGE_LOW;
 
-void draw_string(int px, int py, const char* s, uint32_t fg, uint32_t bg, font_id_t font) {
+void draw_string(int px, int py, const char* s, uint32_t fg, uint32_t bg, font_id_t font, int privilege) {
+
+    if (privilege < currentRequiredPrivilege) {
+        return; // Do not draw if the privilege level is lower than the required level
+    }
+
     int cursor_x = px;
     while (*s) {
         if (*s == '\n' || *s == '\r') {
             py += font_height(font);
             cursor_x = px;
         } else {
-            draw_char(cursor_x, py, *s, fg, bg, font);
+            if (font == MONOSPACE1) {
+                char c = *s >= 'a' && *s <= 'z' ? *s - 32 : *s; // Convert lowercase to uppercase
+                draw_char(cursor_x, py, c, fg, bg, font, privilege);
+            } else {
+                draw_char(cursor_x, py, *s, fg, bg, font, privilege);
+            }
             cursor_x += font_width(font);
         }
         s++;
@@ -61,9 +72,10 @@ void initDisplay(struct multiboot_info* bootInfo) {
 }
 
 void testDisplayAndFonts() {
-    draw_string(100, 50, "HELLO WORLD!, 0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ,;:!?./\\^$%&~\"#{}()|_^[]*-+<>@", 0x00FFFFFF, 0x00000022, MONOSPACE1);
-    draw_string(100, 100, " !\"#$%&'()*+,-./0123456789:;<=>?\n@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~", 0x00FFFFFF, 0x00000022, MONOSPACE2_BIGGER);
+    draw_string(100, 50, "HELLO WORLD!, 0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ,;:!?./\\^$%&~\"#{}()|_^[]*-+<>@", 0x00FFFFFF, 0x00000022, MONOSPACE1, DISPLAY_PRIVILEDGE_LOW);
+    draw_string(100, 100, " !\"##$%&'()*+,-./0123456789:;<=>?\n@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~", 0x00FFFFFF, 0x00000022, MONOSPACE2_BIGGER, DISPLAY_PRIVILEDGE_LOW);
+    draw_string(500, 150, "!\u0022!", 0x00FFFFFF, 0x00000022, MONOSPACE2_BIGGER, DISPLAY_PRIVILEDGE_LOW);
     for (int i = 0; i < 10*FONT_MONOSPACE2_HEIGHT; i+=FONT_MONOSPACE2_HEIGHT) {
-        draw_char(100+i, 150+i, CEIL_DIV(i, FONT_MONOSPACE2_HEIGHT)+0x20, 0x00ffffFF, 0x00000022, MONOSPACE2_BIGGER);
+        draw_char(100+i, 150+i, CEIL_DIV(i, FONT_MONOSPACE2_HEIGHT)+0x20, 0x00ffffFF, 0x00000022, MONOSPACE2_BIGGER, DISPLAY_PRIVILEDGE_LOW);
     }
 }

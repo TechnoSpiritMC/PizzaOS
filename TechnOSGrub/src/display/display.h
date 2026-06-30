@@ -10,6 +10,22 @@ extern int fb_pitch;
 #define SCREEN_WIDTH  800
 #define SCREEN_HEIGHT 600
 
+#define DISPLAY_PRIVILEDGE_LOW 0
+#define DISPLAY_PRIVILEDGE_HIGH 1
+#define DISPLAY_PRIVILEDGE_CRITICAL 2
+
+extern int currentRequiredPrivilege;
+
+static inline void setRequiredPrivilege(int privilege) {
+    currentRequiredPrivilege = privilege;
+}
+static inline void resetRequiredPrivilege() {
+    currentRequiredPrivilege = DISPLAY_PRIVILEDGE_LOW;
+}
+static inline void getRequiredPrivilege(int* privilege) {
+    *privilege = currentRequiredPrivilege;
+}
+
 static inline uint32_t blend(uint32_t fg, uint32_t bg, uint8_t alpha /*0-255*/) {
     uint8_t fr = (fg >> 16) & 0xFF, fgg = (fg >> 8) & 0xFF, fb_ = fg & 0xFF;
     uint8_t br = (bg >> 16) & 0xFF, bgg = (bg >> 8) & 0xFF, bb_ = bg & 0xFF;
@@ -19,7 +35,12 @@ static inline uint32_t blend(uint32_t fg, uint32_t bg, uint8_t alpha /*0-255*/) 
     return (r << 16) | (g << 8) | b;
 }
 
-static inline void draw_char(int px, int py, char c, uint32_t fg, uint32_t bg, font_id_t font) {
+static inline void draw_char(int px, int py, char c, uint32_t fg, uint32_t bg, font_id_t font, int privilege) {
+
+    if (privilege < currentRequiredPrivilege) {
+        return; // Do not draw if the privilege level is lower than the required level
+    }
+
     int16_t idx = font_glyph_idx(font, c);
     if (idx < 0) return; /* unknown char, draw nothing or a placeholder box */
 
@@ -33,10 +54,17 @@ static inline void draw_char(int px, int py, char c, uint32_t fg, uint32_t bg, f
     }
 }
 
-static inline void draw_pixel(int px, int py, uint32_t color) {
+static inline void draw_pixel(int px, int py, uint32_t color, int privilege) {
+    if (privilege < currentRequiredPrivilege) {
+        return; // Do not draw if the privilege level is lower than the required level
+    }
     framebuffer[py * fb_pitch + px] = color;
 }
 
-void draw_string(int px, int py, const char* s, uint32_t fg, uint32_t bg, font_id_t font);
+static inline void getPixelColor(int px, int py, uint32_t* color) {
+    *color = framebuffer[py * fb_pitch + px];
+}
+
+void draw_string(int px, int py, const char* s, uint32_t fg, uint32_t bg, font_id_t font, int privilege);
 void initDisplay(struct multiboot_info* bootInfo);
 void testDisplayAndFonts();
