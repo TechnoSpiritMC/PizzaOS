@@ -4,6 +4,8 @@
 #include "../include/stdint.h"
 #include "../interrupts/idt.h"
 
+#include "../stdlib/serial.h"
+
 #define freq 100
 
 uint32_t ticks = 0;
@@ -38,6 +40,6 @@ void onIrq0(struct InterruptRegisters* regs) {
 void sleep(uint64_t ms) {
     uint64_t start = ticks;
     while (ticks - start < ms * freq) { // Do not mind the error; ticks updates in the background because of a bios interrupt.
-        __asm__ volatile("hlt");
+        // __asm__ volatile("hlt");
     }
 }
