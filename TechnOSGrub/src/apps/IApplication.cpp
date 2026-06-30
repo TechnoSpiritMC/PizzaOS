@@ -24,6 +24,12 @@ extern "C" void app_mouse_bridge_callback(uint8_t flags) {
     }
 }
 
+extern "C" void app_redraw_all_elements() {
+    if (g_current_app) {
+        g_current_app->drawAllElements();
+    }
+}
+
 namespace Application {
 
     // ==========================================
@@ -65,11 +71,10 @@ namespace Application {
     void Button::draw(IApplication& _application) {
         (void)_application; // Suppress unused parameter warning cleanly
         drawRectWithBorders(x, y, width, height, 1, BUTTON_FILL_COLOR(state), BUTTON_BORDER_COLOR(state));
-        draw_string(x + 3, y + 3 + font_height(MONOSPACE1), text, Color(0).toRGB(), BUTTON_FILL_COLOR(state).toRGB(), MONOSPACE1);
+        draw_string(x + 3, y + 3 + font_height(MONOSPACE1), text, Color(0).toRGB(), BUTTON_FILL_COLOR(state).toRGB(), MONOSPACE1, DISPLAY_PRIVILEDGE_LOW);
     }
 
     void Button::redrawWhenInside(uint16_t target_x, uint16_t target_y) { // Removed override keyword
-        LOG_LINE();
         serial_printf("Drawing button.\r\n");
         if (isInside(target_x, target_y)) {
             Button::draw(application);
@@ -93,7 +98,6 @@ namespace Application {
     }
 
     void DisplaySection::redrawWhenInside(uint16_t target_x, uint16_t target_y) { // Removed override keyword
-        LOG_LINE();
         serial_printf("Drawing Display section.\r\n");
         for (uint32_t i = 0; i < elements.size; i++) {
             serial_printf("Drawing element %x of display section.\r\n", i);
@@ -115,6 +119,7 @@ namespace Application {
     {
         this->isWindow = true;
         Window::draw(application);
+        List::list_append(this->application.elements, (void*)this);
     }
 
     void Window::draw(IApplication& _application) { // Removed override keyword
@@ -122,11 +127,10 @@ namespace Application {
         drawRectWithBorders(x, y, width, height, 1, Color(255, 255, 255), Color(192, 192, 200));
         drawRect(x + 1, y + 21, width - 2, height - 22, Color(0, 0, 0));
         drawRect(x + 1, y + 1, width - 2, 20, Color(192, 192, 200));
-        draw_string(x + 3, y - 3 + font_height(MONOSPACE1), application.name, Color(0).toRGB(), Color(192, 192, 200).toRGB(), MONOSPACE1);
+        draw_string(x + 3, y - 3 + font_height(MONOSPACE1), application.name, Color(0).toRGB(), Color(192, 192, 200).toRGB(), MONOSPACE1, DISPLAY_PRIVILEDGE_LOW);
     }
 
     void Window::redrawWhenInside(uint16_t target_x, uint16_t target_y) { // Removed override keyword
-        LOG_LINE();
         serial_printf("Drawing window.\r\n");
         if (isInside(target_x, target_y)) {
             Window::draw(application);
@@ -135,7 +139,7 @@ namespace Application {
     }
 
     void Window::close() {
-        drawRect(x, y, width, height, Color(0));
+        drawRect(x, y, width, height, Color(0, 0, 0x22));
     }
 
     // ==========================================
@@ -154,26 +158,21 @@ namespace Application {
     }
 
     void IApplication::run(uint32_t flags) {
-        LOG_LINE();
         uint32_t struct_addr = malloc(sizeof(List::ArrayList));
         this->elements = (List::ArrayList*)struct_addr;
         List::list_init(this->elements, 1);
 
-        LOG_LINE();
         window = new Window(0, 0, 320, 240, *this);
 
         // Save the instance context so our bridge can find it
         g_current_app = this; 
 
-        LOG_LINE();
         // FIXED: Pass the clean flat C function pointer instead of 'this'
         mouse_add_listener((void*)app_mouse_bridge_callback);
 
-        LOG_LINE();
         serial_printf("[IApplication.cpp] Starting app.\r\n");
         main(flags);
 
-        LOG_LINE();
         serial_printf("[IApplication.cpp] Closing app.\r\n");
         window->close();
         
@@ -182,23 +181,40 @@ namespace Application {
     }
 
     void IApplication::onMouseEvent(uint8_t mouse_flags) {
+
+        if (redrawAllRequired(mouse_flags)) {
+            drawAllElements();
+        }
+
         if (!window || !window->isInside(__mx, __my)) return;
 
-        LOG_LINE();
         userMouseEventHandler(__mx, __my, mouse_flags);
-
-        LOG_LINE();
         onMouseMove();
     }
 
     void IApplication::onMouseMove() {
-        LOG_LINE();
         if (!elements) return;
 
         for (uint32_t i = 0; i < elements->size; i++) {
-            LOG_LINE();
-            serial_printf("Currently at element: %x\r\n", i);
-            ((DisplayElement*)elements->items[i])->redrawWhenInside(__mx, __my);
+            if (!((DisplayElement*)elements->items[i])->isWindow) {
+                ((DisplayElement*)elements->items[i])->redrawWhenInside(__mx, __my);
+            }
+        }
+    }
+
+    void IApplication::drawAllElements() {
+        if (!elements) return;
+
+        for (uint32_t i = 0; i < elements->size; i++) {
+            if (((DisplayElement*)elements->items[i])->isWindow) {
+                ((Window*)elements->items[i])->draw(*this);
+            }
+        }
+
+        for (uint32_t i = 0; i < elements->size; i++) {
+            if (!((DisplayElement*)elements->items[i])->isWindow) {
+                ((DisplayElement*)elements->items[i])->draw(*this);
+            }
         }
     }
 }

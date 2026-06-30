@@ -7,6 +7,9 @@ extern "C" {
 
     // Explicitly expose mouse listeners if not present in mouse.h
     uint8_t mouse_add_listener(void* listener);
+
+    // C ABI bridge: redraw all elements of the currently running app.
+    void app_redraw_all_elements();
 }
 
 #include "../../display/screen.hpp"
@@ -105,5 +108,6 @@ namespace Application {
         void run(uint32_t flags);
         void onMouseEvent(uint8_t mouse_flags);
         void onMouseMove();
+        void drawAllElements();
     };
 }
