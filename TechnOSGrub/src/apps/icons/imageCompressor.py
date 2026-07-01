@@ -40,17 +40,97 @@
 #
 # LBA Sector = 0x500 + (Cluster - 2)
 # Byte Offset = LBA Sector * 512
+#
+# entries = [struct.unpack(dir_entry_format, sector_data[i*32:(i+1)*32]) for i in range(16)]
 
 import os
+import struct
+import math
+
+dir_entry_format = "<11sB8sI4H"
 
 class FileData:
     def __init__(self, file):
         with open(file, "r+b") as f:
-            
             self.name      = f.name
-            self.fileName  = "".join([(self.name.split(":")[0]+ "       ")[i] for i in range(7)])
-            self.extension = "".join([(self.name.split(":")[1]+ "   ")[i]     for i in range(3)])
-            self.size      = os.path.getsize(f)
 
-            
-    
+            self.fileName = self.name.split(":")[0][:8].ljust(8)
+            self.extension = self.name.split(":")[1][:3].ljust(3)
+            self.fatName = self.fileName + self.extension
+
+            self.size      = os.path.getsize(file)
+            self.data      = f.read()
+
+        print(f"Opened a file: {self.name} (Saved format: \"{''.join([self.fileName, self.extension])}\"). Size: {self.size}")
+
+    def getName(self):
+        return self.name
+
+    def getFatName(self):
+        return "".join([self.fileName, self.extension])
+
+    def getSize(self):
+        return self.size
+
+    def getData(self):
+        return self.data
+
+class FAT:
+    def __init__(self, path, fileData: FileData):
+        self.fileData = fileData
+        self.path = path
+
+        with open(path, "r+b") as f:
+            self.content = list(f.read())
+            self.entries = [struct.unpack(dir_entry_format, self.content[(0x80000 + i*32):(0x80000 + (i+1)*32)]) for i in range(16)]
+
+        self.emptySlots = []
+
+        for i in range(16):
+            if self.entries[i][0] == 0xE5 or self.entries[i][0] == 0x00:
+                print("Found empty slot: ", self.entries)
+                self.emptySlots.append(i)
+
+        self.emptyClusters = []
+
+        for i in range(256):
+            if self.content[(0x20000 + 4*i):(0x20000 + 4*(i+1))] == b'\x00\x00\x00\x00':
+                print("Found free cluster: ", i)
+                self.emptyClusters.append(i)
+
+        self.requiredClusters = math.ceil(self.fileData.getSize() / 512)
+
+        if len(self.emptyClusters) >= self.requiredClusters:
+            print("Enough free clusters found!")
+        else:
+            print("Not enough free clusters found!")
+            raise Exception("Not enough free clusters found!")
+
+        for i, cluster in enumerate(self.emptyClusters[0:self.requiredClusters]):
+            for j in range(512):
+                self.content[(0x500 + (cluster-2)) * 512 + j] = self.fileData.getData()[512*i + j]
+
+
+        for index in range(self.requiredClusters):
+            self.content[(0x20000 + 4*index):(0x20000 + 4*(index+1))] = struct.pack("<I", (self.emptyClusters[index+1] if index < len(self.emptyClusters)-1 else 0x0fffffff))
+
+        cluster = self.emptyClusters[0]
+        cluster_high = (cluster >> 16) & 0xFFFF
+        cluster_low = cluster & 0xFFFF
+
+        self.content[(0x80000 + self.emptySlots[0] * 32):(0x80000 + (self.emptySlots[0] + 1) * 32)] = struct.pack(
+                dir_entry_format,
+                self.fileData.getFatName().encode(),
+                0x00,
+                b'\x00\x00\x00\x00\x00\x00\x00\x00',
+                self.fileData.getSize(),
+                cluster_high,
+                0,
+                0,
+                cluster_low
+        )
+
+        self.binary = bytes(self.content)
+
+        with open(path, "wb") as f:
+            f.write(self.binary)
